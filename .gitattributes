@@ -1,0 +1,5 @@
+# Tells Github UI to allow comments in json files
+*.json linguist-language=JSON-with-Comments
+
+# Tells Github to not take js config root files into acccount for language statistics
+/*.js linguist-detectable=false

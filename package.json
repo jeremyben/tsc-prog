@@ -1,0 +1,42 @@
+{
+	"name": "tsc-prog",
+	"version": "1.0.0",
+	"author": "Jeremy Bensimon",
+	"repository": "github:jeremyben/tsc-prog",
+	"license": "MIT",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"engines": {
+		"node": ">=8.10"
+	},
+	"engineStrict": true,
+	"scripts": {
+		"build": "rimraf dist && tsc -p tsconfig.build.json",
+		"prepublishOnly": "yarn build",
+		"release": "standard-version",
+		"test": "jest --runInBand",
+		"test:watch": "jest --runInBand --watch --verbose false"
+	},
+	"dependencies": {},
+	"peerDependencies": {
+		"typescript": ">=3"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^8.0.0",
+		"@commitlint/config-conventional": "^8.0.0",
+		"@types/jest": "^24.0.15",
+		"@types/node": "^10",
+		"husky": "^3.0.0",
+		"jest": "^24.8.0",
+		"standard-version": "^6.0.1",
+		"ts-jest": "^24.0.2",
+		"ts-node": "^8.3.0",
+		"tslint": "^5.18.0",
+		"tslint-config-prettier": "^1.18.0",
+		"typescript": "^3.5.3",
+		"typescript-tslint-plugin": "^0.5.4"
+	}
+}
