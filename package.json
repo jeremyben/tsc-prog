@@ -2,8 +2,14 @@
 	"name": "tsc-prog",
 	"version": "1.0.0",
 	"author": "Jeremy Bensimon",
-	"repository": "github:jeremyben/tsc-prog",
 	"license": "MIT",
+	"repository": "github:jeremyben/tsc-prog",
+	"keywords": [
+		"typescript",
+		"tsc",
+		"compiler",
+		"programmatic"
+	],
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"files": [
