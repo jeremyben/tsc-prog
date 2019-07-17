@@ -1,5 +1,6 @@
 import ts from 'typescript'
 import { join, isAbsolute } from 'path'
+import { rmrf } from './addons'
 import { CreateProgramFromConfigOptions, TsConfig, EmitOptions } from './interfaces'
 
 /**
@@ -7,9 +8,8 @@ import { CreateProgramFromConfigOptions, TsConfig, EmitOptions } from './interfa
  * @public
  */
 export function build(options: CreateProgramFromConfigOptions & EmitOptions) {
-	const { betterDiagnostics, ...programOptions } = options
-	const program = createProgramFromConfig(programOptions)
-	emit(program, { betterDiagnostics })
+	const program = createProgramFromConfig(options)
+	emit(program, options)
 }
 
 /**
@@ -68,13 +68,40 @@ export function createProgramFromConfig({
  * Compile Typescript files and emit diagnostics if any, throws an error if it fails.
  * @public
  */
-export function emit(program: ts.Program, options: EmitOptions = {}) {
+export function emit(program: ts.Program, { betterDiagnostics, clean, basePath }: EmitOptions = {}) {
+	if (clean && Array.isArray(clean) && clean.length) {
+		console.log('Cleaning files')
+		if (basePath) {
+			clean.map((path) => (isAbsolute(path) ? path : join(basePath, path))).forEach(rmrf)
+		} else {
+			clean.forEach(rmrf)
+		}
+	} else if (clean && !Array.isArray(clean)) {
+		const { outDir, outFile, declarationDir } = program.getCompilerOptions()
+
+		if (clean.outDir && outDir) {
+			console.log('Cleaning outDir')
+			rmrf(outDir)
+		}
+
+		if (clean.outFile && outFile) {
+			console.log('Cleaning outFile')
+			rmrf(outFile)
+		}
+
+		if (clean.declarationDir && declarationDir) {
+			console.log('Cleaning declarationDir')
+			rmrf(declarationDir)
+		}
+	}
+
+	console.log('Compilation started')
 	const { diagnostics, emitSkipped } = program.emit()
 
 	// https://github.com/dsherret/ts-morph/issues/384
 	const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(diagnostics)
 
-	logDiagnostics(allDiagnostics, options.betterDiagnostics)
+	logDiagnostics(allDiagnostics, betterDiagnostics)
 
 	if (emitSkipped) throw Error('Compilation failed')
 

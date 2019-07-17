@@ -1,4 +1,4 @@
-import { createProgramFromConfig, build } from '.'
+import { createProgramFromConfig, build, emit } from '.'
 import { join } from 'path'
 import { existsSync, unlinkSync } from 'fs'
 
@@ -37,6 +37,7 @@ test('Build without errors', async () => {
 
 	build({
 		basePath,
+		clean: { outDir: true },
 		compilerOptions: {
 			rootDir: 'src',
 			outDir: 'dist',
@@ -51,5 +52,4 @@ test('Build without errors', async () => {
 
 	const distMainFile = join(basePath, 'dist', 'main.js')
 	expect(existsSync(distMainFile)).toBe(true)
-	unlinkSync(distMainFile)
 })

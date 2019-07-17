@@ -30,4 +30,17 @@ export type EmitOptions = {
 	 * Format diagnostics with colors and context, instead of single lines.
 	 */
 	betterDiagnostics?: boolean
+
+	/**
+	 * List of files or folders to recursively delete before compilation :
+	 * accepts absolute paths or relative to `basePath`.
+	 *
+	 * Also accepts a map of common compiler options targets.
+	 */
+	clean?: string[] | { outDir?: true; outFile?: true; declarationDir?: true }
+
+	/**
+	 * A root directory to resolve relative paths in the `clean` option array to.
+	 */
+	basePath?: string
 }
