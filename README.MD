@@ -11,7 +11,7 @@ yarn add -D tsc-prog
 
 _Tsc-prog has no dependency. You just need typescript as a peer dependency._
 
-### You simply need to build
+### You simply need to build 👷‍
 
 Use **`tsc.build`**.
 
@@ -34,7 +34,7 @@ tsc.build({
 
 You can have a look at the parameters **[here](./src/interfaces.ts)**.
 
-### You need more access
+### You need more access 👨‍🏭
 
 The `tsc.build` function is made of the two following steps, which you can have access to :
 
@@ -58,9 +58,9 @@ tsc.emit(program, { betterDiagnostics: true })
 
 ## Addons
 
-### Clean
+### Clean 🧹
 
-We frequently need to clean the emmited files before a new build, so a `clean` option recursively removes folders and files :
+We frequently need to clean the emmited files before a new build, so a **`clean`** option recursively removes folders and files :
 
 ```js
 tsc.build({
@@ -83,3 +83,11 @@ tsc.build({
 	clean: { outDir: true, declarationDir: true },
 })
 ```
+
+##### Protections 🛡️
+
+The `clean` option protects you against deleting the following folders :
+
+- the specified `basePath` and all its parents (up to the root folder).
+- the current working directory and all its parents (up to the root folder).
+- the `rootDir` path if specified in the compiler options.

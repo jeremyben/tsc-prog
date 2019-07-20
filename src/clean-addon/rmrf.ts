@@ -5,7 +5,7 @@ import { join, relative } from 'path'
  * Inspired from {@link https://github.com/isaacs/rimraf}
  * @internal
  */
-export function rmrf(path: string) {
+export default function rmrf(path: string) {
 	// TODO: rely on ENOENT instead
 	// https://nodejs.org/dist/latest/docs/api/fs.html#fs_fs_exists_path_callback
 	if (!existsSync(path)) return
@@ -14,13 +14,12 @@ export function rmrf(path: string) {
 	else tryDeleteFile(path)
 
 	function deleteRecursive(dirPath: string) {
-		const fileNames = readdirSync(dirPath)
-		// if (fileNames && fileNames.length)
-		for (const fileName of fileNames) {
-			const filePath = join(dirPath, fileName)
+		const names = readdirSync(dirPath)
+		for (const name of names) {
+			const path_ = join(dirPath, name)
 
-			if (tryIsDirectory(filePath)) deleteRecursive(filePath)
-			else tryDeleteFile(filePath)
+			if (tryIsDirectory(path_)) deleteRecursive(path_)
+			else tryDeleteFile(path_)
 		}
 		tryDeleteEmptyDir(dirPath)
 	}
@@ -80,11 +79,8 @@ function fsSyncRetry<T extends (path: string) => any>(
 		// tslint:disable-next-line: no-empty
 		while (Date.now() < until) {}
 	}
-}
 
-/**
- * @internal
- */
-function fixWindowsEPERM(path: string) {
-	if (process.platform === 'win32') chmodSync(path, 0o666)
+	function fixWindowsEPERM(path_: string) {
+		if (process.platform === 'win32') chmodSync(path_, 0o666)
+	}
 }

@@ -1,8 +1,7 @@
 import ts from 'typescript'
-import { join, isAbsolute } from 'path'
-import { rmrf } from './addons'
 import { CreateProgramFromConfigOptions, TsConfig, EmitOptions } from './interfaces'
 import { ensureAbsolutePath } from './path.utils'
+import cleanTargets from './clean-addon'
 
 /**
  * Compile ts files by creating a compilation object using the compiler API and emitting js files.
@@ -72,30 +71,9 @@ export function createProgramFromConfig({
  * @public
  */
 export function emit(program: ts.Program, { betterDiagnostics, clean, basePath }: EmitOptions = {}) {
-	if (clean && Array.isArray(clean) && clean.length) {
-		console.log('Cleaning files')
-		if (basePath) {
-			clean.map((path) => (isAbsolute(path) ? path : join(basePath, path))).forEach(rmrf)
-		} else {
-			clean.forEach(rmrf)
-		}
-	} else if (clean && !Array.isArray(clean)) {
-		const { outDir, outFile, declarationDir } = program.getCompilerOptions()
-
-		if (clean.outDir && outDir) {
-			console.log('Cleaning outDir')
-			rmrf(outDir)
-		}
-
-		if (clean.outFile && outFile) {
-			console.log('Cleaning outFile')
-			rmrf(outFile)
-		}
-
-		if (clean.declarationDir && declarationDir) {
-			console.log('Cleaning declarationDir')
-			rmrf(declarationDir)
-		}
+	if (clean) {
+		const compilerOptions = program.getCompilerOptions()
+		cleanTargets(clean, compilerOptions, basePath)
 	}
 
 	console.log('Compilation started')
