@@ -1,16 +1,46 @@
-/**
- * Mimics tsconfig.json file content.
- */
+export type CompilerOptions = import('typescript').CompilerOptions
+
 export type TsConfig = {
-	/** Instructs the TypeScript compiler how to compile .ts files. */
-	compilerOptions?: import('typescript').CompilerOptions
+	/**
+	 * Instructs the TypeScript compiler how to compile .ts files.
+	 */
+	compilerOptions?: CompilerOptions
+
+	/**
+	 * Specifies a list of glob patterns that match files to be included in compilation.
+	 * If no 'files' or 'include' property is present in a tsconfig.json, the compiler
+	 * defaults to including all files in the containing directory and subdirectories
+	 * except those specified by 'exclude'.
+	 */
 	include?: string[]
+
+	/**
+	 * Specifies a list of files to be excluded from compilation.
+	 * The 'exclude' property only affects the files included via the 'include' property
+	 * and not the 'files' property.
+	 */
 	exclude?: string[]
+
+	/**
+	 * If no 'files' or 'include' property is present in a tsconfig.json, the compiler
+	 * defaults to including all files in the containing directory and subdirectories
+	 * except those specified by 'exclude'. When a 'files' property is specified,
+	 * only those files and those specified by 'include' are included.
+	 */
 	files?: string[]
+
+	/**
+	 * Path to base configuration file to inherit from.
+	 */
 	extends?: string
-	references?: { path: string }[]
-	// compileOnSave?: boolean
-	// typeAcquisition?: { enable: boolean; include: string[]; exclude: string[] }
+
+	/**
+	 * Referenced projects.
+	 */
+	references?: Array<{
+		/** Path to referenced tsconfig or to folder containing tsconfig */
+		path: string
+	}>
 }
 
 export type CreateProgramFromConfigOptions = TsConfig & {
@@ -40,7 +70,7 @@ export type EmitOptions = {
 	clean?: string[] | { outDir?: true; outFile?: true; declarationDir?: true }
 
 	/**
-	 * A root directory to resolve relative paths in the `clean` option array to.
+	 * A root directory to resolve relative paths in the `clean` option to.
 	 */
 	basePath?: string
 }

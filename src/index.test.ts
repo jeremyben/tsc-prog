@@ -1,15 +1,15 @@
-import { createProgramFromConfig, build, emit } from '.'
-import { join } from 'path'
-import { existsSync, unlinkSync } from 'fs'
+import { existsSync } from 'fs'
+import { join, normalize } from 'path'
+import ts from 'typescript'
+import { createProgramFromConfig, build } from '.'
 
 const basePath = join(__dirname, '__fixtures__')
+const configFilePath = 'tsconfig.fixture.json'
 
-test('Override config file and create program', async () => {
-	const consoleWarnSpy = spyOn(console, 'warn')
-
+test('Create program by overriding config file', async () => {
 	const program = createProgramFromConfig({
 		basePath,
-		configFilePath: 'tsconfig.fixture.json',
+		configFilePath,
 		compilerOptions: {
 			rootDir: 'src',
 			outDir: 'dist',
@@ -19,33 +19,32 @@ test('Override config file and create program', async () => {
 		exclude: ['**/excluded'],
 	})
 
-	const options = program.getCompilerOptions()
-	expect(options).toMatchObject({
+	expect(program.getCompilerOptions()).toMatchObject({
 		strict: true,
-		rootDir: join(basePath, 'src').replace(/\\/g, '/'),
-		declaration: undefined,
+		// `compilerOptions` properties returns unix separators in windows paths
+		rootDir: normalize(join(basePath, 'src')),
+		declaration: false,
 	})
 
-	expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("'declaration' requires a value of type boolean"))
-
-	const rootFileNames = program.getRootFileNames()
-	expect(rootFileNames).toHaveLength(1)
+	expect(program.getRootFileNames()).toHaveLength(1)
 })
 
-test('Build without errors', async () => {
+test('Build without errors with config from scratch', async () => {
 	const consoleWarnSpy = spyOn(console, 'warn')
 
 	build({
 		basePath,
+		// configFilePath,
 		clean: { outDir: true },
 		compilerOptions: {
+			module: ts.ModuleKind.ES2015,
+			moduleResolution: ts.ModuleResolutionKind.NodeJs,
+			target: ts.ScriptTarget.ES5,
 			rootDir: 'src',
 			outDir: 'dist',
 			declaration: false,
-			strict: true,
 			skipLibCheck: true,
 		},
-		exclude: ['**/excluded'],
 	})
 
 	expect(consoleWarnSpy).not.toHaveBeenCalledWith(expect.stringContaining('error'))
