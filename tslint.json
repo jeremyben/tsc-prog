@@ -4,16 +4,17 @@
 	"rulesDirectory": [],
 	// https://palantir.github.io/tslint/rules/
 	"rules": {
+		"variable-name": [true, "require-const-for-all-caps", "ban-keywords", "check-format", "allow-trailing-underscore"],
 		"interface-name": [true, "never-prefix"],
-		"no-implicit-dependencies": [true, "dev"],
 		"interface-over-type-literal": false,
 		"no-angle-bracket-type-assertion": false,
+		"array-type": false,
+		"no-implicit-dependencies": [true, "dev"],
 		"no-console": false,
 		"object-literal-sort-keys": false,
 		"ordered-imports": false,
 		"member-access": false,
 		"curly": [true, "ignore-same-line"],
-		"array-type": false,
 		"prefer-object-spread": false
 	}
 }
