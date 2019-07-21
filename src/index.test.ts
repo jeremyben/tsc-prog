@@ -1,6 +1,5 @@
 import { existsSync } from 'fs'
-import { join, normalize } from 'path'
-import ts from 'typescript'
+import { join } from 'path'
 import { createProgramFromConfig, build } from '.'
 
 jest.mock('./clean-addon/rmrf')
@@ -9,6 +8,8 @@ const basePath = join(__dirname, '__fixtures__')
 const configFilePath = 'tsconfig.fixture.json'
 
 test('Create program by overriding config file', async () => {
+	const consoleWarnSpy = spyOn(console, 'warn')
+
 	const program = createProgramFromConfig({
 		basePath,
 		configFilePath,
@@ -24,9 +25,11 @@ test('Create program by overriding config file', async () => {
 	expect(program.getCompilerOptions()).toMatchObject({
 		strict: true,
 		// `compilerOptions` properties returns unix separators in windows paths
-		rootDir: normalize(join(basePath, 'src')),
-		declaration: 'true',
+		rootDir: join(basePath, 'src').replace(/\\/g, '/'),
+		declaration: undefined,
 	})
+
+	expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("'declaration' requires a value of type boolean"))
 
 	expect(program.getRootFileNames()).toHaveLength(1)
 })
@@ -39,9 +42,10 @@ test('Build without errors with config from scratch', async () => {
 		// configFilePath,
 		clean: { outDir: true },
 		compilerOptions: {
-			module: ts.ModuleKind.ES2015,
-			moduleResolution: ts.ModuleResolutionKind.NodeJs,
-			target: ts.ScriptTarget.ES5,
+			module: 'es2015',
+			moduleResolution: 'node',
+			target: 'es2019',
+			lib: ['es2019'],
 			rootDir: 'src',
 			outDir: 'dist',
 			declaration: false,

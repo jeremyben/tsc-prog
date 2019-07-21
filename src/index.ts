@@ -38,7 +38,7 @@ export function createProgramFromConfig({
 		config = readResult.config
 	}
 
-	// config.compilerOptions = Object.assign({}, config.compilerOptions, compilerOptions)
+	config.compilerOptions = Object.assign({}, config.compilerOptions, compilerOptions)
 	if (include) config.include = include
 	if (exclude) config.exclude = exclude
 	if (files) config.files = files
@@ -49,13 +49,11 @@ export function createProgramFromConfig({
 		config,
 		ts.sys,
 		basePath,
-		compilerOptions,
+		undefined,
 		configFilePath
 	)
 
 	logDiagnostics(errors, true)
-
-	normalizeOptionValues(options, basePath)
 
 	const program = ts.createProgram({
 		options,
@@ -107,30 +105,4 @@ function logDiagnostics(diagnostics: ts.Diagnostic[], better = false) {
 		: ts.formatDiagnostics(diagnostics, formatHost)
 
 	console.warn(message)
-}
-
-/**
- * @see https://github.com/microsoft/TypeScript/blob/v3.5.3/src/compiler/commandLineParser.ts#L2528
- * @internal
- */
-function normalizeOptionValues(options: ts.CompilerOptions, basePath: string) {
-	// https://github.com/microsoft/TypeScript/blob/v3.5.3/src/compiler/commandLineParser.ts#L76
-	const pathOptions = [
-		'outFile',
-		'outDir',
-		'rootDir',
-		'tsBuildInfoFile',
-		'baseUrl',
-		'rootDirs',
-		'typeRoots',
-		'declarationDir',
-	]
-
-	for (const o of pathOptions) {
-		if (options[o] == null) continue
-
-		options[o] = Array.isArray(options[o])
-			? (options[o] as string[]).map((value) => ensureAbsolutePath(value, basePath))
-			: ensureAbsolutePath(options[o] as string, basePath)
-	}
 }

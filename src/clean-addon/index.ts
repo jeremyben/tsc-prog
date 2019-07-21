@@ -1,4 +1,5 @@
-import { EmitOptions, CompilerOptions } from '../interfaces'
+import { CompilerOptions } from 'typescript'
+import { EmitOptions } from '../interfaces'
 import { ensureAbsolutePath, relativePath, normalizePath, parentPaths } from '../path.utils'
 import rmrf from './rmrf'
 
