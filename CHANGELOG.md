@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.1](https://github.com/jeremyben/tsc-prog/compare/v1.2.0...v1.2.1) (2019-07-21)
+
+
+### Bug Fixes
+
+* use compiler options from tsconfig.json schema, not ts module ([c651fcc](https://github.com/jeremyben/tsc-prog/commit/c651fcc))
+
+
+
 ## [1.2.0](https://github.com/jeremyben/tsc-prog/compare/v1.1.0...v1.2.0) (2019-07-20)
 
 
