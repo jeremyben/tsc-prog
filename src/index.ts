@@ -69,20 +69,27 @@ export function createProgramFromConfig({
  * @public
  */
 export function emit(program: ts.Program, { betterDiagnostics, clean, basePath }: EmitOptions = {}) {
+	const options = program.getCompilerOptions()
 	if (clean) {
-		const compilerOptions = program.getCompilerOptions()
-		cleanTargets(clean, compilerOptions, basePath)
+		cleanTargets(clean, options, basePath)
+	}
+
+	if (options.listFiles) {
+		console.log('Files to compile:\n' + program.getRootFileNames().join('\n'))
 	}
 
 	console.log('Compilation started')
-	const { diagnostics, emitSkipped } = program.emit()
+	const { diagnostics, emitSkipped, emittedFiles } = program.emit()
+
+	if (options.listEmittedFiles && emittedFiles) {
+		console.log('Emitted files:\n' + emittedFiles.join('\n'))
+	}
 
 	// https://github.com/dsherret/ts-morph/issues/384
 	const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(diagnostics)
-
 	logDiagnostics(allDiagnostics, betterDiagnostics)
 
-	if (emitSkipped) throw Error('Compilation failed')
+	if (!options.noEmit && emitSkipped) throw Error('Compilation failed')
 
 	console.log('Compilation successful')
 }

@@ -47,8 +47,10 @@ test('Build without errors with config from scratch', async () => {
 			target: 'es2019',
 			lib: ['es2019'],
 			rootDir: 'src',
+			listEmittedFiles: true,
+			listFiles: true,
 			outDir: 'dist',
-			declaration: false,
+			declaration: true,
 			skipLibCheck: true,
 		},
 	})
