@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.2](https://github.com/jeremyben/tsc-prog/compare/v1.2.1...v1.2.2) (2019-07-22)
+
+
+### Bug Fixes
+
+* compiler list files options (pre-compile and emitted) ([e882ef8](https://github.com/jeremyben/tsc-prog/commit/e882ef8))
+* protect parents of rootDir in clean option ([c7131f5](https://github.com/jeremyben/tsc-prog/commit/c7131f5))
+
+
+
 ### [1.2.1](https://github.com/jeremyben/tsc-prog/compare/v1.2.0...v1.2.1) (2019-07-21)
 
 
