@@ -19,7 +19,7 @@ test('Create program by overriding config file', async () => {
 			declaration: 'true' as any,
 			skipLibCheck: true,
 		},
-		exclude: ['**/excluded'],
+		exclude: ['**/excluded', '**/dist'],
 	})
 
 	expect(program.getCompilerOptions()).toMatchObject({

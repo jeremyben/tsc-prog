@@ -47,19 +47,25 @@ function protectSensitiveFolders(
 	compilerOptions: CompilerOptions,
 	basePath: string
 ) {
-	const { rootDir } = compilerOptions
 	const cwd = process.cwd()
-
-	const protectedDirs: (string | undefined)[] = [rootDir, cwd, ...parentPaths(cwd)]
+	let protectedDirs: string[] = [cwd, ...parentPaths(cwd)]
 
 	if (cwd !== basePath) {
 		protectedDirs.push(basePath, ...parentPaths(basePath))
 	}
 
+	// `compilerOptions` properties returns unix separators in windows paths so we must normalize
+	const rootDir = normalizePath(compilerOptions.rootDir)
+	if (rootDir && rootDir !== cwd && rootDir !== basePath) {
+		protectedDirs.push(rootDir, ...parentPaths(rootDir))
+	}
+
+	// Dedupe
+	protectedDirs = [...new Set(protectedDirs)]
+
 	const check = (target: string) => {
 		for (const dir of protectedDirs) {
-			// `compilerOptions` properties returns unix separators in windows paths so we must normalize
-			if (target === normalizePath(dir)) throw Error(`You cannot delete ${target}`)
+			if (target === dir) throw Error(`You cannot delete ${target}`)
 		}
 	}
 

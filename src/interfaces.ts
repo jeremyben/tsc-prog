@@ -31,7 +31,7 @@ export interface EmitOptions {
 }
 
 /**
- * Mimicks tsconfig.json file.
+ * Mimicks part of tsconfig.json file.
  *
  * Retrieved with the help of:
  * https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json
