@@ -20,7 +20,7 @@
 	},
 	"engineStrict": true,
 	"scripts": {
-		"build": "rimraf dist && tsc -p tsconfig.build.json",
+		"build": "ts-node -T build.ts",
 		"prepublishOnly": "yarn build",
 		"release": "standard-version",
 		"test": "jest --runInBand",

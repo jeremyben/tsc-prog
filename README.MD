@@ -9,7 +9,7 @@ npm i -D tsc-prog
 yarn add -D tsc-prog
 ```
 
-_Tsc-prog has no dependency. You just need typescript as a peer dependency._
+_tsc-prog has no dependency. You just need typescript as a peer dependency._
 
 ### You simply need to build 👷‍
 
