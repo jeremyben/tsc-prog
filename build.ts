@@ -5,7 +5,11 @@ import { build } from './src'
 build({
 	basePath: __dirname,
 	extends: './tsconfig.json',
-	compilerOptions: { skipLibCheck: true },
+	compilerOptions: {
+		rootDir: './src',
+		outDir: './dist',
+		skipLibCheck: true,
+	},
 	include: ['src/**/*.ts'],
 	exclude: ['**/__tests__', '**/*.test.ts', '**/*.spec.ts', '**/__fixtures__'],
 	clean: { outDir: true },

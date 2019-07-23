@@ -1,8 +1,8 @@
 import { existsSync } from 'fs'
 import { join } from 'path'
-import { createProgramFromConfig, build } from '.'
+import { createProgramFromConfig, build } from './src'
 
-jest.mock('./clean-addon/rmrf')
+jest.mock('./src/clean-addon/rmrf')
 
 const basePath = join(__dirname, '__fixtures__')
 const configFilePath = 'tsconfig.fixture.json'
