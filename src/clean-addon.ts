@@ -1,7 +1,7 @@
 import { CompilerOptions } from 'typescript'
-import { EmitOptions } from '../interfaces'
-import { ensureAbsolutePath, relativePath, normalizePath, parentPaths } from '../path.utils'
-import rmrf from './rmrf'
+import { EmitOptions } from './interfaces'
+import { ensureAbsolutePath, relativeToCWD, normalizePath, parentPaths } from './path.utils'
+import { rmrf } from './fs.utils'
 
 /**
  * @internal
@@ -16,24 +16,24 @@ export default function cleanTargets(
 	if (Array.isArray(targets)) {
 		for (let target of targets) {
 			target = ensureAbsolutePath(target, basePath)
-			console.log('Cleaning:', relativePath(target))
+			console.log('Cleaning:', relativeToCWD(target))
 			rmrf(target)
 		}
 	} else {
 		const { outDir, outFile, declarationDir } = compilerOptions
 
 		if (targets.outDir && outDir) {
-			console.log('Cleaning outDir:', relativePath(outDir))
+			console.log('Cleaning outDir:', relativeToCWD(outDir))
 			rmrf(outDir)
 		}
 
 		if (targets.declarationDir && declarationDir) {
-			console.log('Cleaning declarationDir:', relativePath(declarationDir))
+			console.log('Cleaning declarationDir:', relativeToCWD(declarationDir))
 			rmrf(declarationDir)
 		}
 
 		if (targets.outFile && outFile) {
-			console.log('Cleaning outFile:', relativePath(outFile))
+			console.log('Cleaning outFile:', relativeToCWD(outFile))
 			rmrf(outFile)
 		}
 	}

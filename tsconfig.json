@@ -11,7 +11,7 @@
 		// "declarationMap": true,
 		// "sourceMap": true,
 		// "outFile": "./",
-		// "outDir": "./dist",
+		"outDir": "./dist",
 		// "rootDir": "./src",
 		// "composite": true,
 		// "removeComments": true,

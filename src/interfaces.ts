@@ -17,6 +17,11 @@ export interface EmitOptions {
 	betterDiagnostics?: boolean
 
 	/**
+	 * Copy non typescript files and folders to `outDir` path if defined in compiler options.
+	 */
+	copyOtherToOutDir?: boolean
+
+	/**
 	 * List of files or folders to recursively delete before compilation :
 	 * accepts absolute paths or relative to `basePath`.
 	 *

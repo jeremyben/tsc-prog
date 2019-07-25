@@ -2,6 +2,7 @@ import ts from 'typescript'
 import { CreateProgramFromConfigOptions, TsConfig, EmitOptions } from './interfaces'
 import { ensureAbsolutePath } from './path.utils'
 import cleanTargets from './clean-addon'
+import copyOtherFiles from './copy-addon'
 
 /**
  * Compile ts files by creating a compilation object using the compiler API and emitting js files.
@@ -68,7 +69,7 @@ export function createProgramFromConfig({
  * Compile Typescript files and emit diagnostics if any, throws an error if it fails.
  * @public
  */
-export function emit(program: ts.Program, { betterDiagnostics, clean, basePath }: EmitOptions = {}) {
+export function emit(program: ts.Program, { betterDiagnostics, copyOtherToOutDir, clean, basePath }: EmitOptions = {}) {
 	const options = program.getCompilerOptions()
 	if (clean) {
 		cleanTargets(clean, options, basePath)
@@ -91,7 +92,10 @@ export function emit(program: ts.Program, { betterDiagnostics, clean, basePath }
 
 	if (!options.noEmit && emitSkipped) throw Error('Compilation failed')
 
-	console.log('Compilation successful')
+	if (copyOtherToOutDir) copyOtherFiles(program, emittedFiles)
+
+	if (allDiagnostics.length) console.log(`Compilation done with ${allDiagnostics.length} errors`)
+	else console.log('Compilation successful')
 }
 
 /**

@@ -90,4 +90,15 @@ The `clean` option protects you against deleting the following folders :
 
 - the specified `basePath` and all its parents (up to the root folder).
 - the current working directory and all its parents (up to the root folder).
-- the `rootDir` path if specified in the compiler options.
+- the `rootDir` path if specified in the compiler options and all its parents (up to the root folder).
+
+### Copy non-typescript files
+
+```js
+tsc.build({
+	basePath: __dirname,
+	configFilePath: 'tsconfig.json',
+	clean: { outDir: true },
+	copyOtherToOutDir: true,
+})
+```

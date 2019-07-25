@@ -10,8 +10,8 @@ export function ensureAbsolutePath(path: string, basePath: string = process.cwd(
 /**
  * @internal
  */
-export function relativePath(path: string, basePath: string = process.cwd()): string {
-	return p.relative(basePath, path)
+export function relativeToCWD(path: string): string {
+	return p.relative(process.cwd(), path)
 }
 
 /**
