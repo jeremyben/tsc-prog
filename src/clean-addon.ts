@@ -38,6 +38,12 @@ export default function cleanTargets(
 			rmrf(outFile)
 		}
 	}
+
+	// Pause on windows to try to work around eventual lingering file handles
+	if (process.platform === 'win32') {
+		const until = Date.now() + 250
+		while (Date.now() < until) {}
+	}
 }
 
 /**
