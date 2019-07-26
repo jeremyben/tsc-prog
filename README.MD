@@ -66,13 +66,11 @@ We frequently need to clean the emmited files before a new build, so a **`clean`
 tsc.build({
 	basePath: __dirname,
 	configFilePath: 'tsconfig.json',
-	clean: ['dist'],
+	clean: ['dist'], // accepts relative paths to `basePath` or absolute paths
 })
 ```
 
-It accepts relative paths to the `basePath` or absolute paths.
-
-_If you need glob matching, you can retrieve a list of files by using the [glob module](https://github.com/isaacs/node-glob#globsyncpattern-options) (preferably the sync method)._
+It helps to address [this issue](https://github.com/microsoft/TypeScript/issues/16057).
 
 You can also directly specify common targets from your compiler options :
 
@@ -94,11 +92,19 @@ The `clean` option protects you against deleting the following folders :
 
 ### Copy non-typescript files
 
+The **`copyOtherToOutDir`** option allows you to copy other files to `outDir` (well it says so) :
+
 ```js
 tsc.build({
 	basePath: __dirname,
 	configFilePath: 'tsconfig.json',
-	clean: { outDir: true },
+	compilerOptions: {
+		outDir: 'dist'
+	},
 	copyOtherToOutDir: true,
 })
 ```
+
+It helps to address [this issue](https://github.com/Microsoft/TypeScript/issues/30835).
+
+This option is protected against overriding files emitted by the compiler, like same name `.js` or `.json` files (could happen).

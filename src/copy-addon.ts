@@ -5,8 +5,6 @@ import { cp } from './fs.utils'
 
 /**
  * Copy non-typescript files to `outDir`.
- * Addresses this issue: https://github.com/Microsoft/TypeScript/issues/30835.
- *
  * @param emittedFiles files previously emitted by the compiler and protected from being overwritted
  * @internal
  */
