@@ -60,7 +60,9 @@ tsc.emit(program, { betterDiagnostics: true })
 
 ### Clean 🧹
 
-We frequently need to clean the emmited files before a new build, so a **`clean`** option recursively removes folders and files :
+_Helps to address [this issue](https://github.com/microsoft/TypeScript/issues/16057)._
+
+We frequently need to delete the emitted files from a previous build, so a **`clean`** option recursively removes folders and files :
 
 ```js
 tsc.build({
@@ -69,8 +71,6 @@ tsc.build({
 	clean: ['dist'], // accepts relative paths to `basePath` or absolute paths
 })
 ```
-
-It helps to address [this issue](https://github.com/microsoft/TypeScript/issues/16057).
 
 You can also directly specify common targets from your compiler options :
 
@@ -82,7 +82,7 @@ tsc.build({
 })
 ```
 
-##### Protections 🛡️
+###### Protections
 
 The `clean` option protects you against deleting the following folders :
 
@@ -90,7 +90,9 @@ The `clean` option protects you against deleting the following folders :
 - the current working directory and all its parents (up to the root folder).
 - the `rootDir` path if specified in the compiler options and all its parents (up to the root folder).
 
-### Copy non-typescript files
+### Copy non-typescript files 🎏
+
+_Helps to address [this issue](https://github.com/Microsoft/TypeScript/issues/30835)._
 
 The **`copyOtherToOutDir`** option allows you to copy other files to `outDir` (well it says so) :
 
@@ -104,7 +106,5 @@ tsc.build({
 	copyOtherToOutDir: true,
 })
 ```
-
-It helps to address [this issue](https://github.com/Microsoft/TypeScript/issues/30835).
 
 This option is protected against overriding files emitted by the compiler, like same name `.js` or `.json` files (could happen).
