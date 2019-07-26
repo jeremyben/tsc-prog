@@ -1,6 +1,7 @@
 import ts from 'typescript'
 import { CreateProgramFromConfigOptions, TsConfig, EmitOptions, BuildOptions } from './interfaces'
 import { ensureAbsolutePath } from './path.utils'
+import { logDiagnostics, red, yellow, green } from './log.utils'
 import cleanTargets from './clean-addon'
 import copyOtherFiles from './copy-addon'
 
@@ -85,30 +86,13 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, 
 	const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(diagnostics)
 	logDiagnostics(allDiagnostics, betterDiagnostics)
 
-	if (!options.noEmit && emitSkipped) throw Error('Compilation failed')
+	if (!options.noEmit && emitSkipped) {
+		console.error(red('Compilation failed'))
+		return
+	}
 
 	if (copyOtherToOutDir) copyOtherFiles(program, emittedFiles)
 
-	if (allDiagnostics.length) console.log(`Compilation done with ${allDiagnostics.length} errors`)
-	else console.log('Compilation successful')
-}
-
-/**
- * Log compiler diagnostics to stderr.
- * @internal
- */
-function logDiagnostics(diagnostics: ts.Diagnostic[], better = false) {
-	if (!diagnostics.length) return
-
-	const formatHost: ts.FormatDiagnosticsHost = {
-		getCanonicalFileName: (path) => path,
-		getCurrentDirectory: ts.sys.getCurrentDirectory,
-		getNewLine: () => ts.sys.newLine,
-	}
-
-	const message = better
-		? ts.formatDiagnosticsWithColorAndContext(diagnostics, formatHost)
-		: ts.formatDiagnostics(diagnostics, formatHost)
-
-	console.warn(message)
+	if (allDiagnostics.length) console.log(yellow(`Compilation done with ${allDiagnostics.length} errors`))
+	else console.log(green('Compilation successful'))
 }

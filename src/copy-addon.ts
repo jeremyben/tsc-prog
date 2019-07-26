@@ -2,6 +2,7 @@ import { sys, Program } from 'typescript'
 import { resolve, relative, normalize } from 'path'
 import { relativeToCWD } from './path.utils'
 import { cp } from './fs.utils'
+import { red } from './log.utils'
 
 /**
  * Copy non-typescript files to `outDir`.
@@ -13,14 +14,12 @@ export default function copyOtherFiles(program: Program, emittedFiles: string[] 
 	const { outDir, listEmittedFiles } = program.getCompilerOptions()
 
 	if (outDir == null) {
-		console.warn('Cannot copy: you must define `outDir` in the compiler options')
+		console.error(red('Cannot copy: you must define `outDir` in the compiler options'))
 		return
 	}
 
 	const srcDir = program.getCommonSourceDirectory()
-	if (!srcDir) {
-		throw Error('Cannot copy: issue with internal typescript method `getCommonSourceDirectory`')
-	}
+	if (!srcDir) throw Error('Cannot copy: issue with internal typescript method `getCommonSourceDirectory`')
 
 	const otherFiles = matchAllFilesBut(srcDir, ['**/*.ts'])
 	const copiedFiles: string[] = [] // Track copied files to list them later if needed
