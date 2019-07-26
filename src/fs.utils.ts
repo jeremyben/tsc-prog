@@ -98,7 +98,6 @@ function fsSyncRetry<T extends (path: string) => any>(
 
 	function pause(ms: number) {
 		const until = Date.now() + ms
-		// tslint:disable-next-line: no-empty
 		while (Date.now() < until) {}
 	}
 

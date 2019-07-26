@@ -1,8 +1,11 @@
+export type BuildOptions = CreateProgramFromConfigOptions & EmitOptions
+
 export interface CreateProgramFromConfigOptions extends TsConfig {
 	/**
 	 * A root directory to resolve relative path entries in the config file to.
 	 */
 	basePath: string
+
 	/**
 	 * Config file to look for and inherit from.
 	 * Either an absolute path or relative to `basePath`.
@@ -36,11 +39,12 @@ export interface EmitOptions {
 }
 
 /**
- * Mimicks part of tsconfig.json file.
+ * Mimicks part of `tsconfig.json` file.
+ * Options like `compileOnSave` and `typeAcquisition` are not implemented,
+ * since this is for a basic build pipeline.
  *
  * Retrieved with the help of:
  * https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json
- * and
  * https://app.quicktype.io?share=EJs8p76127qNWGILyTBD
  */
 export interface TsConfig {

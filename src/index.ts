@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import { CreateProgramFromConfigOptions, TsConfig, EmitOptions } from './interfaces'
+import { CreateProgramFromConfigOptions, TsConfig, EmitOptions, BuildOptions } from './interfaces'
 import { ensureAbsolutePath } from './path.utils'
 import cleanTargets from './clean-addon'
 import copyOtherFiles from './copy-addon'
@@ -8,7 +8,7 @@ import copyOtherFiles from './copy-addon'
  * Compile ts files by creating a compilation object using the compiler API and emitting js files.
  * @public
  */
-export function build(options: CreateProgramFromConfigOptions & EmitOptions) {
+export function build(options: BuildOptions) {
 	const program = createProgramFromConfig(options)
 	emit(program, options)
 }
@@ -24,7 +24,7 @@ export function createProgramFromConfig({
 	include,
 	exclude,
 	files,
-	extends: extend,
+	extends: extend, // cuz keyword
 	references,
 }: CreateProgramFromConfigOptions) {
 	let config: TsConfig = {}
@@ -69,22 +69,17 @@ export function createProgramFromConfig({
  * Compile Typescript files and emit diagnostics if any, throws an error if it fails.
  * @public
  */
-export function emit(program: ts.Program, { betterDiagnostics, copyOtherToOutDir, clean, basePath }: EmitOptions = {}) {
+export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, betterDiagnostics }: EmitOptions = {}) {
 	const options = program.getCompilerOptions()
-	if (clean) {
-		cleanTargets(clean, options, basePath)
-	}
 
-	if (options.listFiles) {
-		console.log('Files to compile:\n' + program.getRootFileNames().join('\n'))
-	}
+	if (clean) cleanTargets(clean, options, basePath)
+
+	if (options.listFiles) console.log('Files to compile:\n' + program.getRootFileNames().join('\n'))
 
 	console.log('Compilation started')
 	const { diagnostics, emitSkipped, emittedFiles } = program.emit()
 
-	if (options.listEmittedFiles && emittedFiles) {
-		console.log('Emitted files:\n' + emittedFiles.join('\n'))
-	}
+	if (options.listEmittedFiles && emittedFiles) console.log('Emitted files:\n' + emittedFiles.join('\n'))
 
 	// https://github.com/dsherret/ts-morph/issues/384
 	const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(diagnostics)

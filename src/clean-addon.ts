@@ -4,6 +4,7 @@ import { ensureAbsolutePath, relativeToCWD, normalizePath, parentPaths } from '.
 import { rmrf } from './fs.utils'
 
 /**
+ * Delete files and folders created by a previous build.
  * @internal
  */
 export default function cleanTargets(

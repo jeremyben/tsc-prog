@@ -15,6 +15,7 @@
 		"ordered-imports": false,
 		"member-access": false,
 		"curly": [true, "ignore-same-line"],
-		"prefer-object-spread": false
+		"prefer-object-spread": false,
+		"no-empty": false
 	}
 }
