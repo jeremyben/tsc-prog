@@ -4,7 +4,7 @@ import ts from 'typescript'
  * Log compiler diagnostics to stderr.
  * @internal
  */
-export function logDiagnostics(diagnostics: ts.Diagnostic[], better = false) {
+export function logDiagnostics(diagnostics: ts.Diagnostic[], pretty = false) {
 	if (!diagnostics.length) return
 
 	const formatHost: ts.FormatDiagnosticsHost = {
@@ -13,7 +13,7 @@ export function logDiagnostics(diagnostics: ts.Diagnostic[], better = false) {
 		getNewLine: () => ts.sys.newLine,
 	}
 
-	const message = better
+	const message = pretty
 		? ts.formatDiagnosticsWithColorAndContext(diagnostics, formatHost)
 		: ts.formatDiagnostics(diagnostics, formatHost)
 

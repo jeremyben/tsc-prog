@@ -70,7 +70,7 @@ export function createProgramFromConfig({
  * Compile Typescript files and emit diagnostics if any, throws an error if it fails.
  * @public
  */
-export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, betterDiagnostics }: EmitOptions = {}) {
+export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }: EmitOptions = {}) {
 	const options = program.getCompilerOptions()
 
 	if (clean) cleanTargets(clean, options, basePath)
@@ -84,7 +84,7 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, 
 
 	// https://github.com/dsherret/ts-morph/issues/384
 	const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(diagnostics)
-	logDiagnostics(allDiagnostics, betterDiagnostics)
+	logDiagnostics(allDiagnostics, options.pretty as boolean | undefined)
 
 	if (!options.noEmit && emitSkipped) {
 		console.error(red('Compilation failed'))

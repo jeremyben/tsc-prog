@@ -15,11 +15,6 @@ export interface CreateProgramFromConfigOptions extends TsConfig {
 
 export interface EmitOptions {
 	/**
-	 * Format diagnostics with colors and context, instead of single lines.
-	 */
-	betterDiagnostics?: boolean
-
-	/**
 	 * Copy non typescript files and folders to `outDir` path if defined in compiler options.
 	 */
 	copyOtherToOutDir?: boolean
