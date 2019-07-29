@@ -67,7 +67,7 @@ export function createProgramFromConfig({
 }
 
 /**
- * Compile Typescript files and emit diagnostics if any, throws an error if it fails.
+ * Compile Typescript files and emit diagnostics if any.
  * @public
  */
 export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }: EmitOptions = {}) {

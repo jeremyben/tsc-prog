@@ -53,7 +53,7 @@ const program = tsc.createProgramFromConfig({
 // Do what you want with the program
 
 // Actually compile typescript files
-tsc.emit(program, { betterDiagnostics: true })
+tsc.emit(program, { copyOtherToOutDir: true })
 ```
 
 ## Addons
