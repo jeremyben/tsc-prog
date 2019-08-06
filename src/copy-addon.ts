@@ -21,8 +21,11 @@ export default function copyOtherFiles(program: Program, emittedFiles: string[] 
 	const srcDir = program.getCommonSourceDirectory()
 	if (!srcDir) throw Error('Cannot copy: issue with internal typescript method `getCommonSourceDirectory`')
 
-	const otherFiles = matchAllFilesBut(srcDir, ['**/*.ts'])
-	const copiedFiles: string[] = [] // Track copied files to list them later if needed
+	// Exclude typescript files and outDir if previously emitted in the same folder
+	const otherFiles = matchAllFilesBut(srcDir, ['**/*.ts', outDir])
+
+	// Track copied files to list them later if needed
+	const copiedFiles: string[] = []
 
 	for (const srcFile of otherFiles) {
 		const destFile = resolve(outDir, relative(srcDir, srcFile))

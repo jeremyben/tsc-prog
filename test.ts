@@ -142,4 +142,25 @@ describe('Copy', () => {
 
 		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringMatching(/override.*data\.json/))
 	})
+
+	test('do not recursively copy outDir to outDir', () => {
+		// tslint:disable-next-line: no-shadowed-variable
+		const basePath = join(__dirname, '__fixtures__', 'src')
+		// tslint:disable-next-line: no-shadowed-variable
+		const configFilePath = '../tsconfig.fixture.json'
+
+		build({
+			basePath,
+			configFilePath,
+			copyOtherToOutDir: true,
+			compilerOptions: {
+				rootDir: '.',
+				outDir: 'dist',
+			},
+			exclude: ['**/excluded'],
+		})
+
+		const distInDist = join(basePath, 'dist', 'dist')
+		expect(existsSync(distInDist)).toBe(false)
+	})
 })
