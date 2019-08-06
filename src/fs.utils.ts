@@ -69,7 +69,7 @@ function tryDeleteEmptyDir(dirPath: string) {
 
 /**
  * Retry fs sync operations on some error codes, to bypass locks (especially on windows).
- * Inspired from {@link https://github.com/isaacs/rimraf}
+ * Inspired from https://github.com/isaacs/rimraf
  * @internal
  */
 function fsSyncRetry<T extends (path: string) => any>(

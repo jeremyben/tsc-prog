@@ -17,14 +17,6 @@ export function relativeToCWD(path: string): string {
 /**
  * @internal
  */
-export function normalizePath(path: string | undefined): string | undefined {
-	if (!path) return path
-	return p.normalize(path)
-}
-
-/**
- * @internal
- */
 export function parentPaths(path: string): string[] {
 	// tslint:disable-next-line: prefer-const
 	let { root, dir } = p.parse(path)

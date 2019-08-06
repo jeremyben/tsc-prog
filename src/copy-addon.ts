@@ -6,7 +6,7 @@ import { red } from './log.utils'
 
 /**
  * Copy non-typescript files to `outDir`.
- * @param emittedFiles files previously emitted by the compiler and protected from being overwritted
+ * @param emittedFiles files previously emitted by the compiler and protected from being overwritten
  * @internal
  */
 export default function copyOtherFiles(program: Program, emittedFiles: string[] | undefined = []) {

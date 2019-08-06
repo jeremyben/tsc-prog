@@ -1,7 +1,8 @@
 import { CompilerOptions } from 'typescript'
 import { EmitOptions } from './interfaces'
-import { ensureAbsolutePath, relativeToCWD, normalizePath, parentPaths } from './path.utils'
+import { ensureAbsolutePath, relativeToCWD, parentPaths } from './path.utils'
 import { rmrf } from './fs.utils'
+import { normalize } from 'path'
 
 /**
  * Delete files and folders created by a previous build.
@@ -62,7 +63,7 @@ function protectSensitiveFolders(
 	}
 
 	// `compilerOptions` properties returns unix separators in windows paths so we must normalize
-	const rootDir = normalizePath(compilerOptions.rootDir)
+	const rootDir = compilerOptions.rootDir ? normalize(compilerOptions.rootDir) : undefined
 	if (rootDir && rootDir !== cwd && rootDir !== basePath) {
 		protectedDirs.push(rootDir, ...parentPaths(rootDir))
 	}
