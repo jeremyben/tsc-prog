@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.1](https://github.com/jeremyben/tsc-prog/compare/v2.0.0...v2.0.1) (2019-08-06)
+
+
+### Bug Fixes
+
+* outDir was recursively copied into itself ([4b9550c](https://github.com/jeremyben/tsc-prog/commit/4b9550c))
+
+
+
 ## [2.0.0](https://github.com/jeremyben/tsc-prog/compare/v1.3.0...v2.0.0) (2019-07-26)
 
 
