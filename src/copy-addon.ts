@@ -11,7 +11,7 @@ import { red } from './log.utils'
  */
 export default function copyOtherFiles(program: Program, emittedFiles: string[] | undefined = []) {
 	console.log('Copying other files')
-	const { outDir, listEmittedFiles } = program.getCompilerOptions()
+	const { outDir, declarationDir, listEmittedFiles } = program.getCompilerOptions()
 
 	if (outDir == null) {
 		console.error(red('Cannot copy: you must define `outDir` in the compiler options'))
@@ -21,8 +21,10 @@ export default function copyOtherFiles(program: Program, emittedFiles: string[] 
 	const srcDir = program.getCommonSourceDirectory()
 	if (!srcDir) throw Error('Cannot copy: issue with internal typescript method `getCommonSourceDirectory`')
 
-	// Exclude typescript files and outDir if previously emitted in the same folder
-	const otherFiles = matchAllFilesBut(srcDir, ['**/*.ts', outDir])
+	// Exclude typescript files and outDir/declarationDir if previously emitted in the same folder
+	const excludes = ['**/*.ts', outDir]
+	if (declarationDir) excludes.push(declarationDir)
+	const otherFiles = matchAllFilesBut(srcDir, excludes)
 
 	// Track copied files to list them later if needed
 	const copiedFiles: string[] = []
