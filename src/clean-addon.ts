@@ -42,7 +42,7 @@ export default function cleanTargets(
 
 	// Pause on windows to try to work around eventual lingering file handles
 	if (process.platform === 'win32') {
-		const until = Date.now() + 250
+		const until = Date.now() + 500
 		while (Date.now() < until) {}
 	}
 }
