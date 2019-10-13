@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.3](https://github.com/jeremyben/tsc-prog/compare/v2.0.2...v2.0.3) (2019-10-13)
+
+
+### Bug Fixes
+
+* expose interfaces ([b3d550d](https://github.com/jeremyben/tsc-prog/commit/b3d550dfd9b93575aa9bc93ddcb8e0190995cad0))
+* increase pause on windows platform after clean ([150813b](https://github.com/jeremyben/tsc-prog/commit/150813b1bdf79d0ccf33ce40e9994f3fc0d6af0c))
+
 ### [2.0.2](https://github.com/jeremyben/tsc-prog/compare/v2.0.1...v2.0.2) (2019-08-15)
 
 
