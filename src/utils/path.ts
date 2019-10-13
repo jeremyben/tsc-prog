@@ -3,7 +3,8 @@ import * as p from 'path'
 /**
  * @internal
  */
-export function ensureAbsolutePath(path: string, basePath: string = process.cwd()): string {
+export function ensureAbsolutePath(path: string | undefined, basePath: string = process.cwd()): string {
+	if (!path) return ''
 	return p.isAbsolute(path) ? path : p.join(basePath, path)
 }
 

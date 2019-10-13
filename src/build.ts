@@ -2,7 +2,7 @@ import ts from 'typescript'
 import { CreateProgramFromConfigOptions, TsConfig, EmitOptions, BuildOptions } from './interfaces'
 import { ensureAbsolutePath } from './utils/path'
 import { logDiagnostics, Color } from './utils/log'
-import cleanTargets from './clean-addon'
+import cleanTargets, { protectSensitiveFolders } from './clean-addon'
 import copyOtherFiles from './copy-addon'
 
 /**
@@ -73,7 +73,24 @@ export function createProgramFromConfig({
 export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }: EmitOptions = {}) {
 	const options = program.getCompilerOptions()
 
-	if (clean) cleanTargets(clean, options, basePath)
+	if (copyOtherToOutDir && !options.outDir) {
+		throw Color.red('Cannot copy: you must define `outDir` in the compiler options')
+	}
+
+	if (clean) {
+		let targets: string[] = []
+
+		if (Array.isArray(clean)) {
+			targets = clean.map((t) => ensureAbsolutePath(t, basePath))
+		} else {
+			if (clean.outDir && options.outDir) targets.push(options.outDir)
+			if (clean.outFile && options.outFile) targets.push(options.outFile)
+			if (clean.declarationDir && options.declarationDir) targets.push(options.declarationDir)
+		}
+
+		protectSensitiveFolders(targets, options.rootDir, basePath)
+		cleanTargets(targets)
+	}
 
 	if (options.listFiles) console.log('Files to compile:\n' + program.getRootFileNames().join('\n'))
 
@@ -87,12 +104,24 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }
 	logDiagnostics(allDiagnostics, options.pretty as boolean | undefined)
 
 	if (!options.noEmit && emitSkipped) {
-		console.error(Color.red('Compilation failed'))
-		return
+		throw Color.red('Compilation failed')
 	}
 
-	if (copyOtherToOutDir) copyOtherFiles(program, emittedFiles)
+	if (copyOtherToOutDir) {
+		console.log('Copying other files to `outDir`')
 
-	if (allDiagnostics.length) console.log(Color.yellow(`Compilation done with ${allDiagnostics.length} errors`))
-	else console.log(Color.green('Compilation successful'))
+		const srcDir = program.getCommonSourceDirectory()
+		// Should not happen
+		if (!srcDir) throw Color.red('Cannot copy: issue with internal typescript method `getCommonSourceDirectory`')
+
+		const copiedFiles = copyOtherFiles(srcDir, options.outDir!, options.declarationDir, emittedFiles)
+
+		if (options.listEmittedFiles) console.log('Copied files:\n' + copiedFiles.join('\n'))
+	}
+
+	if (allDiagnostics.length) {
+		console.log(Color.yellow(`Compilation done with ${allDiagnostics.length} errors`))
+	} else {
+		console.log(Color.green('Compilation successful'))
+	}
 }

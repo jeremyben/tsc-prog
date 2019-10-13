@@ -11,15 +11,13 @@ jest.mock('./src/utils/fs', () => ({
 	rmrf: jest.fn((path) => console.info('mock rmrf on', path)),
 }))
 
-// Need actual delete implementation for some test,
-// can't unmock implicit imports on a per test basis https://github.com/facebook/jest/issues/2649
-const deleteOutDir = () => {
+// Need actual delete implementation to clean between some tests.
+// Can't unmock implicit imports on a per test basis https://github.com/facebook/jest/issues/2649
+afterEach(() => {
 	const { rmrf } = jest.requireActual('./src/utils/fs')
-	const outDirPath = join(basePath, 'dist')
-	rmrf(outDirPath)
-
-	expect(existsSync(outDirPath)).toBe(false)
-}
+	const outDirPaths = [join(basePath, 'dist'), join(basePath, 'src', 'dist')]
+	outDirPaths.forEach(rmrf)
+})
 
 describe('Basic build', () => {
 	test('Create program by overriding config file', async () => {
@@ -59,7 +57,7 @@ describe('Basic build', () => {
 			// configFilePath,
 			clean: { outDir: true },
 			compilerOptions: {
-				module: 'es2015',
+				module: 'commonjs',
 				moduleResolution: 'node',
 				target: 'es2019',
 				lib: ['es2019'],
@@ -122,10 +120,9 @@ describe('Clean protections', () => {
 })
 
 describe('Copy', () => {
-	beforeEach(deleteOutDir)
-
 	test('all other files', () => {
-		const consoleWarnSpy = spyOn(console, 'warn')
+		const expectedOtherFilesTotal = readdirSync(join(basePath, 'src', 'other')).length
+		const consoleLogSpy = spyOn(console, 'log')
 
 		build({
 			basePath,
@@ -137,10 +134,10 @@ describe('Copy', () => {
 			exclude: ['**/excluded'],
 		})
 
-		const otherDirPath = join(basePath, 'dist', 'other')
-		expect(readdirSync(otherDirPath)).toHaveLength(3)
+		const otherDirDistPath = join(basePath, 'dist', 'other')
+		expect(readdirSync(otherDirDistPath)).toHaveLength(expectedOtherFilesTotal)
 
-		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringMatching(/override.*data\.json/))
+		expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringMatching(/override.*data\.json/))
 	})
 
 	test('do not recursively copy outDir to outDir', () => {
