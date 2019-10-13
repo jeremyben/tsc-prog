@@ -6,6 +6,7 @@
 	"rules": {
 		"variable-name": [true, "require-const-for-all-caps", "ban-keywords", "check-format", "allow-trailing-underscore"],
 		"interface-name": [true, "never-prefix"],
+		"no-namespace": false,
 		"interface-over-type-literal": false,
 		"no-angle-bracket-type-assertion": false,
 		"array-type": false,

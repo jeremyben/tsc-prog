@@ -6,15 +6,15 @@ const basePath = join(__dirname, '__fixtures__')
 const configFilePath = 'tsconfig.fixture.json'
 
 // Mock deleting folders for protection
-jest.mock('./src/fs.utils', () => ({
-	...jest.requireActual('./src/fs.utils'),
+jest.mock('./src/utils/fs', () => ({
+	...jest.requireActual('./src/utils/fs'),
 	rmrf: jest.fn((path) => console.info('mock rmrf on', path)),
 }))
 
 // Need actual delete implementation for some test,
 // can't unmock implicit imports on a per test basis https://github.com/facebook/jest/issues/2649
 const deleteOutDir = () => {
-	const { rmrf } = jest.requireActual('./src/fs.utils')
+	const { rmrf } = jest.requireActual('./src/utils/fs')
 	const outDirPath = join(basePath, 'dist')
 	rmrf(outDirPath)
 

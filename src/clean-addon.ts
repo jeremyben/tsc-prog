@@ -1,7 +1,7 @@
 import { CompilerOptions } from 'typescript'
 import { EmitOptions } from './interfaces'
-import { ensureAbsolutePath, relativeToCWD, parentPaths } from './path.utils'
-import { rmrf } from './fs.utils'
+import { ensureAbsolutePath, relativeToCWD, parentPaths } from './utils/path'
+import { rmrf } from './utils/fs'
 import { normalize } from 'path'
 
 /**

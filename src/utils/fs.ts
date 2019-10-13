@@ -1,16 +1,16 @@
 import * as fs from 'fs'
 import { join, dirname } from 'path'
-import { relativeToCWD } from './path.utils'
+import { relativeToCWD } from './path'
 
 /**
  * Copy file, create parent folders if necessary.
  * @internal
  */
-export function cp(srcPath: string, destPath: string, forbidOverwrite = false) {
-	const copyFlag = forbidOverwrite ? fs.constants.COPYFILE_EXCL : 0
-	const parentDir = dirname(destPath)
+export function cp(srcFilePath: string, destFilePath: string, force = true) {
+	const copyFlag = force ? 0 : fs.constants.COPYFILE_EXCL
+	const parentDir = dirname(destFilePath)
 	fs.mkdirSync(parentDir, { recursive: true }) // no EEXIST error issue with recursive option
-	fs.copyFileSync(srcPath, destPath, copyFlag)
+	fs.copyFileSync(srcFilePath, destFilePath, copyFlag)
 }
 
 /**

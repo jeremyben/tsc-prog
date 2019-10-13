@@ -1,8 +1,8 @@
 import { sys, Program } from 'typescript'
 import { resolve, relative, normalize } from 'path'
-import { relativeToCWD } from './path.utils'
-import { cp } from './fs.utils'
-import { red } from './log.utils'
+import { relativeToCWD } from './utils/path'
+import { cp } from './utils/fs'
+import { Color } from './utils/log'
 
 /**
  * Copy non-typescript files to `outDir`.
@@ -14,7 +14,7 @@ export default function copyOtherFiles(program: Program, emittedFiles: string[] 
 	const { outDir, declarationDir, listEmittedFiles } = program.getCompilerOptions()
 
 	if (outDir == null) {
-		console.error(red('Cannot copy: you must define `outDir` in the compiler options'))
+		console.error(Color.red('Cannot copy: you must define `outDir` in the compiler options'))
 		return
 	}
 
@@ -34,13 +34,13 @@ export default function copyOtherFiles(program: Program, emittedFiles: string[] 
 
 		// Avoid overwriting precedently emitted files (js or json if resolveJsonModule is true)
 		// Need to normalize because emitted files have unix separators in windows paths
-		const wasEmitted = emittedFiles.some((emittedFile) => normalize(emittedFile) === destFile)
-		if (wasEmitted) {
+		const alreadyEmitted = emittedFiles.some((emittedFile) => normalize(emittedFile) === destFile)
+		if (alreadyEmitted) {
 			console.warn(`Won't override previously emitted file: ${relativeToCWD(destFile)}`)
 			continue
 		}
 
-		cp(srcFile, destFile, wasEmitted)
+		cp(srcFile, destFile, !alreadyEmitted)
 		copiedFiles.push(destFile)
 	}
 
