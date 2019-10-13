@@ -1,5 +1,11 @@
+/**
+ * @public
+ */
 export type BuildOptions = CreateProgramFromConfigOptions & EmitOptions
 
+/**
+ * @public
+ */
 export interface CreateProgramFromConfigOptions extends TsConfig {
 	/**
 	 * A root directory to resolve relative path entries in the config file to.
@@ -13,6 +19,9 @@ export interface CreateProgramFromConfigOptions extends TsConfig {
 	configFilePath?: string
 }
 
+/**
+ * @public
+ */
 export interface EmitOptions {
 	/**
 	 * Copy non typescript files and folders to `outDir` path if defined in compiler options.
@@ -41,6 +50,8 @@ export interface EmitOptions {
  * Retrieved with the help of:
  * https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json
  * https://app.quicktype.io?share=EJs8p76127qNWGILyTBD
+ *
+ * @public
  */
 export interface TsConfig {
 	/**
@@ -87,6 +98,8 @@ export interface TsConfig {
 
 /**
  * Instructs the TypeScript compiler how to compile .ts files.
+ *
+ * @public
  */
 export interface TsConfigCompilerOptions {
 	/**
@@ -491,65 +504,4 @@ export interface TsConfigCompilerOptions {
 	 * Watch input files.
 	 */
 	// watch?: boolean
-}
-
-enum CompilerTarget {
-	Es3 = 'es3',
-	Es5 = 'es5',
-	Es6 = 'es6',
-	Es2015 = 'es2015',
-	Es2016 = 'es2016',
-	Es2017 = 'es2017',
-	Es2018 = 'es2018',
-	Es2019 = 'es2019',
-	Es2020 = 'es2020',
-	Esnext = 'esnext',
-}
-
-enum CompilerLib {
-	DOM = 'dom',
-	DOMIterable = 'dom.iterable',
-	Es2015 = 'es2015',
-	Es2015Collection = 'es2015.collection',
-	Es2015Core = 'es2015.core',
-	Es2015Generator = 'es2015.generator',
-	Es2015Iterable = 'es2015.iterable',
-	Es2015Promise = 'es2015.promise',
-	Es2015Proxy = 'es2015.proxy',
-	Es2015Reflect = 'es2015.reflect',
-	Es2015Symbol = 'es2015.symbol',
-	Es2015SymbolWellknown = 'es2015.symbol.wellknown',
-	Es2016 = 'es2016',
-	Es2016ArrayInclude = 'es2016.array.include',
-	Es2017 = 'es2017',
-	Es2017Intl = 'es2017.intl',
-	Es2017Object = 'es2017.object',
-	Es2017Sharedmemory = 'es2017.sharedmemory',
-	Es2017String = 'es2017.string',
-	Es2017Typedarrays = 'es2017.typedarrays',
-	Es2018 = 'es2018',
-	Es2018Asynciterable = 'es2018.asynciterable',
-	Es2018Intl = 'es2018.intl',
-	Es2018Promise = 'es2018.promise',
-	Es2018Regexp = 'es2018.regexp',
-	Es2019 = 'es2019',
-	Es2019Array = 'es2019.array',
-	Es2019Object = 'es2019.object',
-	Es2019String = 'es2019.string',
-	Es2019Symbol = 'es2019.symbol',
-	Es2020 = 'es2020',
-	Es2020String = 'es2020.string',
-	Es2020SymbolWellknown = 'es2020.symbol.wellknown',
-	Es5 = 'es5',
-	Es6 = 'es6',
-	Es7 = 'es7',
-	Esnext = 'esnext',
-	EsnextArray = 'esnext.array',
-	EsnextAsynciterable = 'esnext.asynciterable',
-	EsnextBigint = 'esnext.bigint',
-	EsnextIntl = 'esnext.intl',
-	EsnextSymbol = 'esnext.symbol',
-	Scripthost = 'scripthost',
-	Webworker = 'webworker',
-	WebworkerImportscripts = 'webworker.importscripts',
 }

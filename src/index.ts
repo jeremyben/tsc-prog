@@ -5,6 +5,9 @@ import { logDiagnostics, red, yellow, green } from './log.utils'
 import cleanTargets from './clean-addon'
 import copyOtherFiles from './copy-addon'
 
+// Expose all interfaces
+export * from './interfaces'
+
 /**
  * Compile ts files by creating a compilation object using the compiler API and emitting js files.
  * @public
