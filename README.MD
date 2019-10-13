@@ -27,7 +27,7 @@ tsc.build({
 		declaration: true,
 		skipLibCheck: true,
 	},
-	include: ['src/**/*.ts'],
+	include: ['src/**/*'],
 	exclude: ['**/*.test.ts', '**/*.spec.ts'],
 })
 ```

@@ -10,7 +10,7 @@ build({
 		outDir: './dist',
 		skipLibCheck: true,
 	},
-	include: ['src/**/*.ts'],
+	include: ['src/**/*'],
 	exclude: ['**/__tests__', '**/*.test.ts', '**/*.spec.ts', '**/__fixtures__'],
 	clean: { outDir: true },
 })
