@@ -134,6 +134,9 @@ describe('Copy', () => {
 		const otherDirDistPath = join(basePath, 'dist', 'other')
 		expect(readdirSync(otherDirDistPath)).toHaveLength(expectedOtherFilesTotal)
 
+		const excludedDirDistPath = join(basePath, 'dist', 'excluded')
+		expect(existsSync(excludedDirDistPath)).toBe(false)
+
 		expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringMatching(/override.*main\.js/))
 	})
 

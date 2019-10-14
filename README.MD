@@ -104,7 +104,8 @@ tsc.build({
 		outDir: 'dist', // must be set
 	},
 	copyOtherToOutDir: true,
+	exclude: ['**/somedir'], // taken into account
 })
 ```
 
-This option is protected against overriding files emitted by the compiler, like same name `.js` or `.json` files (could happen).
+This option is protected against overwriting files emitted by the compiler, like same name `.js` files (could happen).

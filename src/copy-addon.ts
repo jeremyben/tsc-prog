@@ -6,8 +6,12 @@ import { cp } from './utils/fs'
  * Copy non-typescript files to `outDir`.
  * @internal
  */
-export default function copyOtherFiles(program: ts.Program, outDir: string, declarationDir: string | undefined) {
+export default function copyOtherFiles(program: ts.Program) {
 	const srcDir = program.getCommonSourceDirectory()
+
+	const options = program.getCompilerOptions()
+	const outDir = options.outDir! // already checked before
+	const declarationDir = options.declarationDir
 
 	// Retrieve a list of emitted .js files included in the program, by manipulating paths.
 	// We could have retrieved them by changing the original `listEmittedFiles` option,
@@ -18,8 +22,10 @@ export default function copyOtherFiles(program: ts.Program, outDir: string, decl
 		return destFile
 	})
 
+	// @ts-ignore https://github.com/Microsoft/TypeScript/issues/1863
+	const excludes: string[] = program[excludeKey] || []
 	// Exclude typescript files and outDir/declarationDir if previously emitted in the same folder
-	const excludes = ['**/*.ts', outDir, declarationDir || '']
+	excludes.push('**/*.ts', outDir, declarationDir || '')
 	const otherFiles = matchAllFilesBut(srcDir, excludes)
 
 	// Track copied files to list them later if needed
@@ -41,6 +47,13 @@ export default function copyOtherFiles(program: ts.Program, outDir: string, decl
 
 	return copiedFiles
 }
+
+/**
+ * Attach exclude pattern to the program during creation,
+ * to keep a reference when copying other files.
+ * @internal
+ */
+export const excludeKey = Symbol('exclude')
 
 /**
  * @internal

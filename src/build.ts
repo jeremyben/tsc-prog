@@ -3,7 +3,7 @@ import { CreateProgramFromConfigOptions, TsConfig, EmitOptions, BuildOptions } f
 import { ensureAbsolutePath } from './utils/path'
 import { logDiagnostics, Color } from './utils/log'
 import cleanTargets, { protectSensitiveFolders } from './clean-addon'
-import copyOtherFiles from './copy-addon'
+import copyOtherFiles, { excludeKey } from './copy-addon'
 
 /**
  * Compiles .ts files by creating a compilation object with the compiler API and emitting .js files.
@@ -65,6 +65,9 @@ export function createProgramFromConfig({
 		host,
 	})
 
+	// @ts-ignore https://github.com/Microsoft/TypeScript/issues/1863
+	program[excludeKey] = config.exclude
+
 	return program
 }
 
@@ -116,7 +119,7 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }
 
 	if (copyOtherToOutDir) {
 		console.log('Copying other files to `outDir`')
-		const copiedFiles = copyOtherFiles(program, outDir!, declarationDir)
+		const copiedFiles = copyOtherFiles(program)
 
 		if (listEmittedFiles) {
 			console.log('Copied files:\n' + copiedFiles.join('\n'))
