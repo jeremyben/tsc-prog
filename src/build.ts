@@ -36,7 +36,11 @@ export function createProgramFromConfig({
 		console.log(`Retrieving ${configFilePath}`)
 
 		const readResult = ts.readConfigFile(configFilePath, ts.sys.readFile)
-		if (readResult.error) logDiagnostics([readResult.error], true)
+
+		if (readResult.error) {
+			const isTTY = !!ts.sys.writeOutputIsTTY && ts.sys.writeOutputIsTTY()
+			logDiagnostics([readResult.error], isTTY)
+		}
 
 		config = readResult.config
 	}
@@ -56,7 +60,10 @@ export function createProgramFromConfig({
 		configFilePath
 	)
 
-	logDiagnostics(errors, true)
+	if (errors && errors.length) {
+		const isTTY = !!ts.sys.writeOutputIsTTY && ts.sys.writeOutputIsTTY()
+		logDiagnostics(errors, isTTY)
+	}
 
 	const program = ts.createProgram({
 		options,

@@ -24,19 +24,21 @@ export function logDiagnostics(diagnostics: ts.Diagnostic[], pretty = false) {
  * @internal
  */
 export namespace Color {
-	export const grey = (text: string) => EscSeq.Grey + text + EscSeq.Reset
+	const isTTY = !!ts.sys.writeOutputIsTTY && ts.sys.writeOutputIsTTY()
 
-	export const red = (text: string) => EscSeq.Red + text + EscSeq.Reset
+	export const grey = (text: string) => (isTTY ? EscSeq.Grey + text + EscSeq.Reset : text)
 
-	export const green = (text: string) => EscSeq.Green + text + EscSeq.Reset
+	export const red = (text: string) => (isTTY ? EscSeq.Red + text + EscSeq.Reset : text)
 
-	export const yellow = (text: string) => EscSeq.Yellow + text + EscSeq.Reset
+	export const green = (text: string) => (isTTY ? EscSeq.Green + text + EscSeq.Reset : text)
 
-	export const blue = (text: string) => EscSeq.Blue + text + EscSeq.Reset
+	export const yellow = (text: string) => (isTTY ? EscSeq.Yellow + text + EscSeq.Reset : text)
 
-	export const magenta = (text: string) => EscSeq.Magenta + text + EscSeq.Reset
+	export const blue = (text: string) => (isTTY ? EscSeq.Blue + text + EscSeq.Reset : text)
 
-	export const cyan = (text: string) => EscSeq.Cyan + text + EscSeq.Reset
+	export const magenta = (text: string) => (isTTY ? EscSeq.Magenta + text + EscSeq.Reset : text)
+
+	export const cyan = (text: string) => (isTTY ? EscSeq.Cyan + text + EscSeq.Reset : text)
 
 	/**
 	 * Foreground color escape sequences.
