@@ -1,8 +1,8 @@
-# tsc-prog
+# `tsc-prog`
 
 Build your TypeScript projects programmatically.
 
-## Get started
+## Getting started
 
 ```bash
 npm i -D tsc-prog
@@ -90,7 +90,7 @@ The `clean` option protects you against deleting the following folders :
 - the current working directory and all its parents (up to the root folder).
 - the `rootDir` path if specified in the compiler options and all its parents (up to the root folder).
 
-### Copy non-typescript files 🎏
+### Copy non-typescript files 🗂️
 
 _Helps to address [this issue](https://github.com/Microsoft/TypeScript/issues/30835)._
 
@@ -101,7 +101,7 @@ tsc.build({
 	basePath: __dirname,
 	configFilePath: 'tsconfig.json',
 	compilerOptions: {
-		outDir: 'dist'
+		outDir: 'dist', // must be set
 	},
 	copyOtherToOutDir: true,
 })
