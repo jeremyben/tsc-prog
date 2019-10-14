@@ -17,6 +17,11 @@ export interface CreateProgramFromConfigOptions extends TsConfig {
 	 * Either an absolute path or relative to `basePath`.
 	 */
 	configFilePath?: string
+
+	/**
+	 * Custom CompilerHost to be used by the Program to interact with the underlying system.
+	 */
+	host?: import('typescript').CompilerHost
 }
 
 /**

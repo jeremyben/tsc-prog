@@ -6,7 +6,7 @@ import cleanTargets, { protectSensitiveFolders } from './clean-addon'
 import copyOtherFiles from './copy-addon'
 
 /**
- * Compile ts files by creating a compilation object using the compiler API and emitting js files.
+ * Compiles .ts files by creating a compilation object with the compiler API and emitting .js files.
  * @public
  */
 export function build(options: BuildOptions) {
@@ -15,7 +15,7 @@ export function build(options: BuildOptions) {
 }
 
 /**
- * Create a compilation object using the compiler API.
+ * Creates a compilation object using the compiler API.
  * @public
  */
 export function createProgramFromConfig({
@@ -27,6 +27,7 @@ export function createProgramFromConfig({
 	files,
 	extends: extend, // cuz keyword
 	references,
+	host,
 }: CreateProgramFromConfigOptions) {
 	let config: TsConfig = {}
 
@@ -61,13 +62,14 @@ export function createProgramFromConfig({
 		options,
 		rootNames: fileNames,
 		projectReferences,
+		host,
 	})
 
 	return program
 }
 
 /**
- * Compile Typescript files and emit diagnostics if any.
+ * Compiles TypeScript files and emits diagnostics if any.
  * @public
  */
 export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }: EmitOptions = {}) {
