@@ -17,9 +17,15 @@ declare module 'typescript' {
 	 */
 	function createCompilerDiagnosticFromMessageChain(chain: DiagnosticMessageChain): Diagnostic
 
+	interface CompilerOptions {
+		listFiles?: boolean
+		listEmittedFiles?: boolean
+		pretty?: boolean
+	}
+
 	interface Program {
 		/**
-		 * @see https://github.com/microsoft/TypeScript/blob/v3.5.3/src/compiler/program.ts#L982-L1006
+		 * @see https://github.com/microsoft/TypeScript/blob/v3.6.4/src/compiler/program.ts#L984-L1008
 		 * @internal
 		 */
 		getCommonSourceDirectory: () => string

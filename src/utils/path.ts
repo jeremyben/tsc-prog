@@ -30,3 +30,25 @@ export function parentPaths(path: string): string[] {
 
 	return parents
 }
+
+/**
+ * @internal
+ */
+export function changeDir(filePath: string, oldDirPath: string, newDirPath: string): string {
+	return p.resolve(newDirPath, p.relative(oldDirPath, filePath))
+}
+
+/**
+ * @param matchExtensions - extensions to replace, match everything if empty. Items should start with a dot.
+ * @param newExtension - should start with a dot.
+ * @internal
+ */
+export function changeExtension(filePath: string, matchExtensions: string[], newExtension: string) {
+	const oldExtension = p.extname(filePath)
+
+	if (matchExtensions.length === 0 || matchExtensions.includes(oldExtension)) {
+		return p.join(p.dirname(filePath), p.basename(filePath, oldExtension) + newExtension)
+	}
+
+	return filePath
+}

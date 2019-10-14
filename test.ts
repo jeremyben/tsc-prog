@@ -122,22 +122,19 @@ describe('Clean protections', () => {
 describe('Copy', () => {
 	test('all other files', () => {
 		const expectedOtherFilesTotal = readdirSync(join(basePath, 'src', 'other')).length
-		const consoleLogSpy = spyOn(console, 'log')
+		const consoleInfoSpy = spyOn(console, 'info')
 
 		build({
 			basePath,
 			configFilePath,
 			copyOtherToOutDir: true,
-			compilerOptions: {
-				listEmittedFiles: true,
-			},
 			exclude: ['**/excluded'],
 		})
 
 		const otherDirDistPath = join(basePath, 'dist', 'other')
 		expect(readdirSync(otherDirDistPath)).toHaveLength(expectedOtherFilesTotal)
 
-		expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringMatching(/override.*data\.json/))
+		expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringMatching(/override.*main\.js/))
 	})
 
 	test('do not recursively copy outDir to outDir', () => {

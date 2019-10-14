@@ -74,8 +74,9 @@ export function createProgramFromConfig({
  */
 export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }: EmitOptions = {}) {
 	const options = program.getCompilerOptions()
+	const { outDir, outFile, rootDir, declarationDir, listFiles, listEmittedFiles, noEmit, pretty } = options
 
-	if (copyOtherToOutDir && !options.outDir) {
+	if (copyOtherToOutDir && !outDir) {
 		throw Color.red('Cannot copy: you must define `outDir` in the compiler options')
 	}
 
@@ -85,40 +86,41 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }
 		if (Array.isArray(clean)) {
 			targets = clean.map((t) => ensureAbsolutePath(t, basePath))
 		} else {
-			if (clean.outDir && options.outDir) targets.push(options.outDir)
-			if (clean.outFile && options.outFile) targets.push(options.outFile)
-			if (clean.declarationDir && options.declarationDir) targets.push(options.declarationDir)
+			if (clean.outDir && outDir) targets.push(outDir)
+			if (clean.outFile && outFile) targets.push(outFile)
+			if (clean.declarationDir && declarationDir) targets.push(declarationDir)
 		}
 
-		protectSensitiveFolders(targets, options.rootDir, basePath)
+		protectSensitiveFolders(targets, rootDir, basePath)
 		cleanTargets(targets)
 	}
 
-	if (options.listFiles) console.log('Files to compile:\n' + program.getRootFileNames().join('\n'))
+	if (listFiles) {
+		console.log('Files to compile:\n' + program.getRootFileNames().join('\n'))
+	}
 
 	console.log('Compilation started')
 	const { diagnostics, emitSkipped, emittedFiles } = program.emit()
 
-	if (options.listEmittedFiles && emittedFiles) console.log('Emitted files:\n' + emittedFiles.join('\n'))
+	if (listEmittedFiles && emittedFiles) {
+		console.log('Emitted files:\n' + emittedFiles.join('\n'))
+	}
 
 	// https://github.com/dsherret/ts-morph/issues/384
 	const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(diagnostics)
-	logDiagnostics(allDiagnostics, options.pretty as boolean | undefined)
+	logDiagnostics(allDiagnostics, pretty)
 
-	if (!options.noEmit && emitSkipped) {
+	if (!noEmit && emitSkipped) {
 		throw Color.red('Compilation failed')
 	}
 
 	if (copyOtherToOutDir) {
 		console.log('Copying other files to `outDir`')
+		const copiedFiles = copyOtherFiles(program, outDir!, declarationDir)
 
-		const srcDir = program.getCommonSourceDirectory()
-		// Should not happen
-		if (!srcDir) throw Color.red('Cannot copy: issue with internal typescript method `getCommonSourceDirectory`')
-
-		const copiedFiles = copyOtherFiles(srcDir, options.outDir!, options.declarationDir, emittedFiles)
-
-		if (options.listEmittedFiles) console.log('Copied files:\n' + copiedFiles.join('\n'))
+		if (listEmittedFiles) {
+			console.log('Copied files:\n' + copiedFiles.join('\n'))
+		}
 	}
 
 	if (allDiagnostics.length) {
