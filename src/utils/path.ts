@@ -34,6 +34,14 @@ export function parentPaths(path: string): string[] {
 /**
  * @internal
  */
+export function fileIsWithin(filePath: string, dirPath: string) {
+	const rel = p.relative(dirPath, filePath)
+	return !rel.startsWith('../') && rel !== '..'
+}
+
+/**
+ * @internal
+ */
 export function changeDir(filePath: string, oldDirPath: string, newDirPath: string): string {
 	return p.resolve(newDirPath, p.relative(oldDirPath, filePath))
 }
@@ -43,7 +51,7 @@ export function changeDir(filePath: string, oldDirPath: string, newDirPath: stri
  * @param newExtension - should start with a dot.
  * @internal
  */
-export function changeExtension(filePath: string, matchExtensions: string[], newExtension: string) {
+export function changeExtension(filePath: string, matchExtensions: readonly string[], newExtension: string): string {
 	const oldExtension = p.extname(filePath)
 
 	if (matchExtensions.length === 0 || matchExtensions.includes(oldExtension)) {

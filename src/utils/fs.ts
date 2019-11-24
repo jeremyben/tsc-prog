@@ -75,7 +75,7 @@ function tryDeleteEmptyDir(dirPath: string) {
 function fsSyncRetry<T extends (path: string) => any>(
 	fsSyncFn: T,
 	path: string,
-	errorCodes: string[],
+	errorCodes: ('EBUSY' | 'EPERM' | 'ENOTEMPTY' | 'EMFILE')[],
 	tries = 13
 ): ReturnType<T> {
 	let round = 1
