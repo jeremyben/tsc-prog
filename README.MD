@@ -2,6 +2,8 @@
 
 Build your TypeScript projects programmatically.
 
+tsc-prog offers flexiblity and convenient options for your more complex production builds (less suited for development builds).
+
 ## Getting started
 
 ```bash
@@ -13,14 +15,14 @@ _tsc-prog has no dependency. You just need typescript as a peer dependency._
 
 ### You simply need to build 👷‍
 
-Use **`tsc.build`**.
+Use **`tsc.build`**. Specify the `basePath` first, and either inherit from a tsconfig file or create a config from scratch.
 
 ```js
 const tsc = require('tsc-prog')
 
 tsc.build({
 	basePath: __dirname, // always required
-	configFilePath: 'tsconfig.json', // optional if you want to create a compilation object from scratch
+	configFilePath: 'tsconfig.json', // config to inherit from (optional)
 	compilerOptions: {
 		rootDir: 'src',
 		outDir: 'dist',
@@ -32,7 +34,7 @@ tsc.build({
 })
 ```
 
-You can have a look at the parameters **[here](./src/interfaces.ts)**.
+_You can have a look at all the parameters **[here](./src/interfaces.ts)**._
 
 ### You need more access 👨‍🏭
 
