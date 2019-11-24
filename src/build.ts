@@ -4,6 +4,7 @@ import { ensureAbsolutePath } from './utils/path'
 import { logDiagnostics, Color } from './utils/log'
 import cleanTargets, { protectSensitiveFolders } from './clean-addon'
 import copyOtherFiles, { excludeKey } from './copy-addon'
+import { bundleDts, getDtsInterceptor } from './bundle-addon'
 
 /**
  * Compiles .ts files by creating a compilation object with the compiler API and emitting .js files.
@@ -82,12 +83,26 @@ export function createProgramFromConfig({
  * Compiles TypeScript files and emits diagnostics if any.
  * @public
  */
-export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }: EmitOptions = {}) {
+export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, bundleDeclaration }: EmitOptions = {}) {
 	const options = program.getCompilerOptions()
-	const { outDir, outFile, rootDir, declarationDir, listFiles, listEmittedFiles, noEmit, pretty } = options
 
-	if (copyOtherToOutDir && !outDir) {
+	if (copyOtherToOutDir && !options.outDir) {
 		throw Color.red('Cannot copy: you must define `outDir` in the compiler options')
+	}
+
+	// Write .d.ts files to an in memory Map in case of bundling.
+	const dtsCache = new Map<string, string>()
+	let dtsInterceptor: ts.WriteFileCallback | undefined
+
+	if (bundleDeclaration) {
+		if (!options.declaration) {
+			throw Color.red('Cannot bundle declarations: you must turn `declaration` on in the compiler options')
+		}
+		if (options.declarationMap) {
+			console.warn(Color.yellow("`declarationMap` won't work with declaration bundling"))
+		}
+
+		dtsInterceptor = getDtsInterceptor(dtsCache)
 	}
 
 	if (clean) {
@@ -96,31 +111,33 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }
 		if (Array.isArray(clean)) {
 			targets = clean.map((t) => ensureAbsolutePath(t, basePath))
 		} else {
-			if (clean.outDir && outDir) targets.push(outDir)
-			if (clean.outFile && outFile) targets.push(outFile)
-			if (clean.declarationDir && declarationDir) targets.push(declarationDir)
+			if (clean.outDir && options.outDir) targets.push(options.outDir)
+			if (clean.outFile && options.outFile) targets.push(options.outFile)
+			if (clean.declarationDir && options.declarationDir) targets.push(options.declarationDir)
 		}
 
-		protectSensitiveFolders(targets, rootDir, basePath)
+		protectSensitiveFolders(targets, options.rootDir, basePath)
 		cleanTargets(targets)
 	}
 
-	if (listFiles) {
+	if (options.listFiles) {
 		console.log('Files to compile:\n' + program.getRootFileNames().join('\n'))
 	}
 
 	console.log('Compilation started')
-	const { diagnostics, emitSkipped, emittedFiles } = program.emit()
+	// tslint:disable-next-line: prefer-const
+	let { diagnostics, emitSkipped, emittedFiles } = program.emit(undefined, dtsInterceptor)
 
-	if (listEmittedFiles && emittedFiles) {
+	if (options.listEmittedFiles && emittedFiles) {
+		if (bundleDeclaration) emittedFiles = emittedFiles.filter((path) => !dtsCache.has(path))
 		console.log('Emitted files:\n' + emittedFiles.join('\n'))
 	}
 
 	// https://github.com/dsherret/ts-morph/issues/384
 	const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(diagnostics)
-	logDiagnostics(allDiagnostics, pretty)
+	logDiagnostics(allDiagnostics, options.pretty)
 
-	if (!noEmit && emitSkipped) {
+	if (!options.noEmit && emitSkipped) {
 		throw Color.red('Compilation failed')
 	}
 
@@ -128,9 +145,14 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir }
 		console.log('Copying other files to `outDir`')
 		const copiedFiles = copyOtherFiles(program)
 
-		if (listEmittedFiles) {
+		if (options.listEmittedFiles) {
 			console.log('Copied files:\n' + copiedFiles.join('\n'))
 		}
+	}
+
+	if (bundleDeclaration) {
+		console.log('Bundling declarations')
+		bundleDts(program, dtsCache, bundleDeclaration)
 	}
 
 	if (allDiagnostics.length) {

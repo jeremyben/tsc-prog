@@ -21,6 +21,7 @@ afterEach(() => {
 
 describe('Basic build', () => {
 	test('Create program by overriding config file', async () => {
+		const expectedFilesTotal = readdirSync(join(basePath, 'src', 'module')).length + 1
 		const consoleWarnSpy = spyOn(console, 'warn')
 
 		const program = createProgramFromConfig({
@@ -46,7 +47,7 @@ describe('Basic build', () => {
 			expect.stringContaining("'declaration' requires a value of type boolean")
 		)
 
-		expect(program.getRootFileNames()).toHaveLength(1)
+		expect(program.getRootFileNames()).toHaveLength(expectedFilesTotal)
 	})
 
 	test('Build without errors with config from scratch', async () => {
@@ -65,6 +66,7 @@ describe('Basic build', () => {
 				outDir: 'dist',
 				resolveJsonModule: true,
 				listEmittedFiles: true,
+				esModuleInterop: true,
 				listFiles: true,
 				declaration: true,
 				skipLibCheck: true,
@@ -159,5 +161,20 @@ describe('Copy', () => {
 
 		const distInDist = join(basePath, 'dist', 'dist')
 		expect(existsSync(distInDist)).toBe(false)
+	})
+})
+
+test.skip('bundle', () => {
+	build({
+		basePath,
+		configFilePath,
+		compilerOptions: {
+			declaration: true,
+			listEmittedFiles: true,
+		},
+		exclude: ['**/excluded'],
+		bundleDeclaration: {
+			entryPoint: 'main.d.ts',
+		},
 	})
 })

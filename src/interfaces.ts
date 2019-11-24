@@ -45,6 +45,24 @@ export interface EmitOptions {
 	 * A root directory to resolve relative paths in the `clean` option to.
 	 */
 	basePath?: string
+
+	/**
+	 * Option to bundle .d.ts files from one or several entrypoints.
+	 */
+	bundleDeclaration?: {
+		/**
+		 * Specifies the .ts file to be used as the starting point for analysis and the final bundle.
+		 * Path is relative to the output directory.
+		 */
+		entryPoint: string | string[]
+
+		/**
+		 * If any error happens during bundling, fallback to original declaration files.
+		 * @default true
+		 */
+		fallbackOnError?: boolean
+
+	}
 }
 
 /**
