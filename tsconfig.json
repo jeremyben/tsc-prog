@@ -66,5 +66,6 @@
 				"configFile": "tslint.json"
 			}
 		]
-	}
+	},
+	"exclude": ["**/__tests__", "**/__fixtures__"]
 }

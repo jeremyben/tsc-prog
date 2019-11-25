@@ -36,7 +36,7 @@ type KV = {
  * @internal
  */
 export const isObservable: (obj: KV) => boolean = (obj) => {
-	return !!obj && (isFunction(obj.lift) && isFunction(obj.subscribe))
+	return !!obj && isFunction(obj.lift) && isFunction(obj.subscribe)
 }
 
 export const isObs = isObservable
@@ -91,8 +91,8 @@ export function OverloadedDecorator(): ParameterDecorator {
 	return (target, methodKey, index) => undefined
 }
 
-export { jsonFixture as fixture } from '../other/data.json'
-// import { jsonFixture as fixture } from '../other/data.json'
+export { jsonFixture as fixture } from '../data.json'
+// import { jsonFixture as fixture } from '../data.json'
 // export { fixture }
-import * as jsonFile from '../other/data.json'
+import * as jsonFile from '../data.json'
 export { jsonFile }
