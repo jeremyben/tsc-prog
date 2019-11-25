@@ -6,6 +6,7 @@ import { collectDirectives } from './directive-collector'
 import { SymbolCollector } from './symbol-collector'
 import { DeclarationCollector } from './declaration-collector'
 import { print } from './printer'
+import { ensureAbsolutePath } from '../utils/path'
 
 /**
  * @internal
@@ -41,7 +42,10 @@ export function bundleDts(
 	const dtsOptions = dtsProgram.getCompilerOptions()
 
 	let entryPoints = typeof entryPoint === 'string' ? [entryPoint] : entryPoint
-	entryPoints = entryPoints.map((e) => join(dtsOutDir, e.replace(/(\.js|\.ts|\.d\.ts)$/m, '.d.ts')))
+	entryPoints = entryPoints.map((ep) => {
+		ep = ep.replace(/(\.js|\.ts|\.d\.ts)$/m, '.d.ts')
+		return ensureAbsolutePath(ep, dtsOutDir)
+	})
 
 	try {
 		// Retrieve all bundles before writing them, to fail on error before any IO.
@@ -58,7 +62,6 @@ export function bundleDts(
 					[directives.typeRef, directives.libRef, declarations.imports, declarations.exports],
 					dtsOptions.newLine
 				)
-				// console.log(bundled)
 
 				return [path, bundled] as const
 			})
