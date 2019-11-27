@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/jeremyben/tsc-prog/compare/v2.0.3...v2.1.0) (2019-11-27)
+
+
+### Features
+
+* expose custom compiler host option ([209470b](https://github.com/jeremyben/tsc-prog/commit/209470b09221eb5bc44c98f3c6a2a3343a301ff2))
+* option to bundle declaration files ([35b6fd9](https://github.com/jeremyben/tsc-prog/commit/35b6fd9285f8cf7dafef9cecf0256aecc8a8e33a))
+
+
+### Bug Fixes
+
+* **bundle:** global name conflicts are more accurately handled ([fd2935b](https://github.com/jeremyben/tsc-prog/commit/fd2935bfb1f355aaef924f59b22e97c6d0b6d0b1))
+* accept absolute path in bundle entrypoint ([ad19633](https://github.com/jeremyben/tsc-prog/commit/ad19633e1d66745c44617ff2fa7573e9542c60f6))
+* copy options takes previous exclude pattern into account ([a1c8f07](https://github.com/jeremyben/tsc-prog/commit/a1c8f07cec1aa8f0160ba061cd60ae9ed83d049d))
+* overwrite protection in copy option did not work without listEmittedFiles ([a1f07b3](https://github.com/jeremyben/tsc-prog/commit/a1f07b32902efa82667f55232611161fd0c6ff30))
+* throw on errors and failures instead of just logging ([ac1c876](https://github.com/jeremyben/tsc-prog/commit/ac1c87640f2f24447b1083b6c771e4c780e5c34a))
+* use colors in logs only if the output is TTY ([1b43895](https://github.com/jeremyben/tsc-prog/commit/1b438954f879c503d34b33ce79fe670e308c5df1))
+
 ### [2.0.3](https://github.com/jeremyben/tsc-prog/compare/v2.0.2...v2.0.3) (2019-10-13)
 
 
