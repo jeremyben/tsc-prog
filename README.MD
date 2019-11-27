@@ -2,7 +2,7 @@
 
 Build your TypeScript projects programmatically.
 
-tsc-prog offers flexiblity and convenient options for your more complex production builds (less suited for development builds).
+`tsc-prog` offers flexiblity and convenient options for your more complex production builds (less suited for development builds).
 
 ## Getting started
 
@@ -11,7 +11,7 @@ npm i -D tsc-prog
 yarn add -D tsc-prog
 ```
 
-_tsc-prog has no dependency. You just need typescript as a peer dependency._
+_`tsc-prog` has no dependency. You just need typescript as a peer dependency._
 
 ### You simply need to build 👷‍
 
@@ -21,7 +21,7 @@ Use **`tsc.build`**. Specify the `basePath` first, and either inherit from a tsc
 const tsc = require('tsc-prog')
 
 tsc.build({
-	basePath: __dirname, // always required
+	basePath: __dirname, // always required, used for relative paths
 	configFilePath: 'tsconfig.json', // config to inherit from (optional)
 	compilerOptions: {
 		rootDir: 'src',
@@ -111,3 +111,33 @@ tsc.build({
 ```
 
 This option is protected against overwriting files emitted by the compiler, like same name `.js` files (could happen).
+
+### Bundle type definitions 🛍️
+
+_Helps to address [this issue](https://github.com/microsoft/TypeScript/issues/4433)._
+
+Rollup your emitted `.d.ts` files into a single one with **`bundleDeclaration`** option.
+
+```js
+tsc.build({
+	basePath: __dirname,
+	configFilePath: 'tsconfig.json',
+	compilerOptions: {
+		rootDir: 'src',
+		outDir: 'dist',
+		declaration: true // must be set
+	},
+	bundleDeclaration: {
+		entryPoint: 'index.d.ts', // relative to the OUTPUT directory ('dist' here)
+		fallbackOnError: false, // default: true
+	},
+})
+```
+
+The `fallbackOnError` option is a safety mecanism that generates the original unbundled definition files if any error happens during the bundling process.
+
+#### Notes on bundling 🗣️
+
+I recommend you still check the final `.d.ts` output, declaration bundling being very complex, with a lot of edge cases and issues such as name conflict and handling of external libraries.
+
+`tsc-prog` does its best to acknowledge every edge case. It covers ones that similar tools don't and probably vice versa. Don't hesitate to review [API Extractor](https://api-extractor.com/) to see if it works better with your program.
