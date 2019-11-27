@@ -1,3 +1,5 @@
+import ts from 'typescript'
+
 /**
  * @public
  */
@@ -21,7 +23,7 @@ export interface CreateProgramFromConfigOptions extends TsConfig {
 	/**
 	 * Custom CompilerHost to be used by the Program to interact with the underlying system.
 	 */
-	host?: import('typescript').CompilerHost
+	host?: ts.CompilerHost
 }
 
 /**
