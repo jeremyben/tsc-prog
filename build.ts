@@ -13,4 +13,7 @@ build({
 	include: ['src/**/*'],
 	exclude: ['**/__tests__', '**/*.test.ts', '**/*.spec.ts', '**/__fixtures__'],
 	clean: { outDir: true },
+	bundleDeclaration: {
+		entryPoint: 'index.d.ts',
+	},
 })
