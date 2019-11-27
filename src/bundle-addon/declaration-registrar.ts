@@ -189,7 +189,7 @@ export class DeclarationRegistrar {
 			}
 		}
 
-		// We must handle modifiers after the new name due to name position possibly being affected by keyword manipulation.
+		// We must handle modifiers after the replacements due to their position possibly being affected by keyword manipulation.
 		if (isTopLevelVariableDeclaration(declaration)) {
 			// Variable declarations are exported via their statement, two parents up.
 			// There may be multiple variables declared in one statement.

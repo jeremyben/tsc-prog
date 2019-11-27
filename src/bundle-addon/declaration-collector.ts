@@ -3,12 +3,7 @@ import { Color } from '../utils/log'
 import { pushDeep, MapEntry } from '../utils/manipulation'
 import { Reference, SymbolCollector } from './symbol-collector'
 import { DeclarationRegistrar, Replacement } from './declaration-registrar'
-import {
-	getModuleSpecifier,
-	getModuleNameFromSpecifier,
-	getDeclarationNameText,
-	lookForProperty,
-} from './syntax-retrieval'
+import { getModuleSpecifier, getModuleNameFromSpecifier, getDeclarationName, lookForProperty } from './syntax-retrieval'
 
 /**
  * @internal
@@ -18,22 +13,36 @@ export class DeclarationCollector {
 
 	private symbols: SymbolCollector
 
-	/** Keep a map of collected references, that could have the same name, associated with their symbols. */
-	private refNamesDeclared: Map<ts.__String, ts.Symbol[]>
+	/**
+	 * Map of exports whose original symbol name conflicts with the global scope,
+	 * that must first imported as a different name before being re-exported.
+	 *
+	 * Example: Given a local declaration `declare class Date`,
+	 * we must write `declare class Date_1` & `export { Date_1 as Date }` to avoid conflicts.
+	 */
+	private exportRenames: Map<ts.Symbol, string>
+
+	/**
+	 * Map of collected references that could have the same name, associated with their symbols.
+	 */
+	private refsDeclared: Map<ts.__String, ts.Symbol[]>
 
 	private program: ts.Program
 	private checker: ts.TypeChecker
 	private entryFile: ts.SourceFile
 
-	private debug = false
+	private debugSwitch = false
 
 	constructor(symbols: SymbolCollector, entryFile: ts.SourceFile, program: ts.Program) {
 		this.program = program
 		this.checker = program.getTypeChecker()
 		this.entryFile = entryFile
 		this.symbols = symbols
-		this.refNamesDeclared = new Map<ts.__String, ts.Symbol[]>()
+		this.refsDeclared = new Map<ts.__String, ts.Symbol[]>()
 		this.declarations = new DeclarationRegistrar()
+		this.exportRenames = this.getExportRenames(this.symbols.exportSymbols)
+
+		// console.log(this.exportRenames)
 
 		for (const moduleName of this.symbols.externalStarModuleNames) {
 			this.declarations.registerStar(moduleName)
@@ -44,10 +53,43 @@ export class DeclarationCollector {
 		}
 	}
 
+	private getExportRenames(exportSymbols: SymbolCollector['exportSymbols']) {
+		const exportRenames = new Map<ts.Symbol, string>()
+
+		exportSymbols.forEach(([origSymbol], exportSymbol) => {
+			const exportName = exportSymbol.escapedName
+			let rename: string | undefined
+
+			// Don't overwrite symbols already renamed.
+			if (exportRenames.has(origSymbol)) return
+
+			if (this.nameIsAlreadyGlobal(exportName)) {
+				let suffix = 1
+				rename = `${exportName}_${suffix}`
+
+				while (this.nameIsAlreadyUsed(rename)) {
+					rename = `${exportName}_${++suffix}`
+				}
+			}
+
+			if (rename) {
+				// this.debug('export', 'will-be-renamed-then-reexported:', exportName, rename)
+				exportRenames.set(origSymbol, rename)
+			}
+		})
+
+		return exportRenames
+	}
+
 	private collectExports([exportSymbol, [origSymbol, references]]: MapEntry<SymbolCollector['exportSymbols']>): void {
 		// We look in the first declaration to retrieve common source file,
 		// since merged and overloaded declarations are in the same source file.
 		const sourceFile = origSymbol.declarations[0].getSourceFile()
+
+		const exportName = exportSymbol.escapedName
+		const origName = origSymbol.escapedName
+		// console.log(exportSymbol.declarations.map((d) => d.getFullText()))
+		// console.log(origSymbol.declarations.map((d) => d.getFullText()))
 
 		//
 		// ═════════ External/JSON ═════════
@@ -62,12 +104,13 @@ export class DeclarationCollector {
 				)
 				return
 			}
-
+			this.debug('export', 'is-from-external-lib:', exportName)
 			this.handleSymbolFromExternalLibrary(exportSymbol, true)
 			return
 		}
 
 		if (ts.isJsonSourceFile(sourceFile)) {
+			this.debug('export', 'is-from-json-file:', exportName)
 			this.handleSymbolFromJsonFile(exportSymbol, sourceFile, true)
 			return
 		}
@@ -75,11 +118,6 @@ export class DeclarationCollector {
 		//
 		// ═════════ Internal ═════════
 		//
-
-		const exportName = exportSymbol.escapedName
-		const origName = origSymbol.escapedName
-		// console.log(exportSymbol.declarations.map((d) => d.getFullText()))
-		// console.log(origSymbol.declarations.map((d) => d.getFullText()))
 
 		// First register referenced declarations and retrieve replacements to the exported declaration if any.
 		const symbolReplacements = this.collectReferences(references)
@@ -89,39 +127,32 @@ export class DeclarationCollector {
 		if (exportName === ts.InternalSymbolName.Default) {
 			// Symbol is already exported, so we simply export the aliased name as default.
 			const otherExportSymbols = this.findOtherExportsWithSameOrig(exportSymbol, origSymbol)
-
-			// Export only one default.
 			if (otherExportSymbols) {
-				this.declarations.registerAlias(otherExportSymbols[0].escapedName, { default: true })
+				// Export only one default.
+				const aliasName = otherExportSymbols[0].escapedName
+				this.debug('export', 'default-already-exported-to-alias:', aliasName)
+				this.declarations.registerAlias(aliasName, { default: true })
 				return
 			}
 
 			// Default symbol is a variable value, and must be declared first before being exported as default.
 			// If the value was exported as is, an intermediary variable named '_default' was created by the compiler.
 			if (origSymbol.flags & ts.SymbolFlags.Variable) {
-				const exportRealName = getDeclarationNameText(exportSymbol.declarations[0])
+				const exportRealName = getDeclarationName(exportSymbol.declarations[0])
 
-				if (exportRealName && exportRealName !== origName) {
-					this.declarations.registerInternal(origSymbol, sourceFile, {
-						default: false,
-						export: false,
-						newName: exportRealName,
-						symbolReplacements,
-					})
-					this.declarations.registerAlias(exportRealName, { default: true })
-				} else {
-					this.declarations.registerInternal(origSymbol, sourceFile, {
-						export: false,
-						default: false,
-						symbolReplacements,
-					})
-					this.declarations.registerAlias(origName, { default: true })
-				}
-
-				return
+				this.debug('export', 'default-variable-to-declare:', exportRealName || origName)
+				this.declarations.registerInternal(origSymbol, sourceFile, {
+					default: false,
+					export: false,
+					newName: exportRealName,
+					symbolReplacements,
+				})
+				this.declarations.registerAlias(exportRealName || origName, { default: true })
+			} else {
+				this.debug('export', 'default-to-declare:', origName)
+				this.declarations.registerInternal(origSymbol, sourceFile, { export: true, default: true, symbolReplacements })
 			}
 
-			this.declarations.registerInternal(origSymbol, sourceFile, { export: true, default: true, symbolReplacements })
 			return
 		}
 
@@ -131,14 +162,30 @@ export class DeclarationCollector {
 		// ─── `export *` | `export { A }` ───
 		// Symbol is eiher directly exported or aliased with the same name.
 		if (exportName === origName) {
-			this.declarations.registerInternal(origSymbol, sourceFile, { export: true, default: false, symbolReplacements })
+			const exportRename = this.exportRenames.get(origSymbol)
+			if (exportRename) {
+				// Name is already used by a global symbol.
+				this.debug('export', 'already-global:', exportName, '| to-declare-then-reexport-as:', exportRename)
+				this.declarations.registerInternal(origSymbol, sourceFile, {
+					export: false,
+					default: false,
+					newName: exportRename,
+					symbolReplacements,
+				})
+				this.declarations.registerAlias(exportRename as ts.__String, { as: exportName })
+			} else {
+				// Usual case.
+				this.debug('export', 'original-name-to-declare:', exportName)
+				this.declarations.registerInternal(origSymbol, sourceFile, { export: true, default: false, symbolReplacements })
+			}
 
 			// Symbol is also exported as different aliases.
 			// + `export { A as B }`
 			const otherExportSymbols = this.findOtherExportsWithSameOrig(exportSymbol, origSymbol)
 			if (otherExportSymbols) {
 				for (const other of otherExportSymbols) {
-					this.declarations.registerAlias(origName, { as: other.escapedName })
+					this.debug('export', 'to-alias:', exportRename || exportName, 'as', other.escapedName)
+					this.declarations.registerAlias((exportRename || exportName) as ts.__String, { as: other.escapedName })
 				}
 			}
 
@@ -149,13 +196,30 @@ export class DeclarationCollector {
 		// ─── `export { A as B }` ───
 		// Symbol is aliased as a different name than the original one.
 		// Symbols aliased as a different name but also exported as the original name are handled in the previous condition.
-		if (exportName !== origName && !this.symbols.exportNames.has(origName)) {
-			this.declarations.registerInternal(origSymbol, sourceFile, {
-				export: true,
-				default: false,
-				newName: exportName,
-				symbolReplacements,
-			})
+		if (exportName !== origName && !this.nameIsAlreadyExported(origName)) {
+			const exportRename = this.exportRenames.get(origSymbol)
+
+			if (exportRename) {
+				// Name is already used by a global symbol.
+				this.debug('export', 'aliased-name-already-global:', exportName, '| to-declare-then-reexport:', exportRename)
+				this.declarations.registerInternal(origSymbol, sourceFile, {
+					export: false,
+					default: false,
+					newName: exportRename,
+					symbolReplacements,
+				})
+				this.declarations.registerAlias(exportRename as ts.__String, { as: exportName })
+			} else {
+				// Usual case.
+				this.debug('export', 'aliased-name-to-declare:', exportName)
+				this.declarations.registerInternal(origSymbol, sourceFile, {
+					export: true,
+					default: false,
+					newName: exportName,
+					symbolReplacements,
+				})
+			}
+
 			return
 		}
 	}
@@ -199,7 +263,7 @@ export class DeclarationCollector {
 			//
 
 			if (this.symbols.globalSymbols.includes(origRefSymbol)) {
-				this.log('ref', 'is-global:', refName)
+				this.debug('ref', 'is-global:', refName)
 				continue
 			}
 
@@ -210,14 +274,14 @@ export class DeclarationCollector {
 
 			if (this.program.isSourceFileFromExternalLibrary(refSourceFile)) {
 				if (ts.isImportTypeNode(ref)) continue
-				this.log('ref', 'is-from-external-lib:', refName)
+				this.debug('ref', 'is-from-external-lib:', refName)
 				this.handleSymbolFromExternalLibrary(refSymbol)
 				continue
 			}
 
 			if (ts.isJsonSourceFile(refSourceFile)) {
 				if (ts.isImportTypeNode(ref)) continue
-				this.log('ref', 'is-from-json-file:', refName)
+				this.debug('ref', 'is-from-json-file:', refName)
 				this.handleSymbolFromJsonFile(refSymbol, refSourceFile)
 				continue
 			}
@@ -228,17 +292,24 @@ export class DeclarationCollector {
 
 			// ─── Already exported ───
 			if (this.symbols.origSymbols.has(origRefSymbol)) {
-				// Already exported as the same name.
-				if (this.symbols.exportNames.has(refName)) {
-					this.log('ref', 'name-already-exported:', refName)
+				// Already exported as is.
+				if (this.nameIsAlreadyExported(refName)) {
+					// Export has possibly been renamed in its declaration if it conflicted with a global name.
+					let possibleRename = this.exportRenames.get(origRefSymbol)
+					if (possibleRename) {
+						possibleRename = this.maybeTypeOf(possibleRename, ref)
+						pushDeep(symbolReplacements, declarationIndex, { replace: ref, by: possibleRename })
+					}
+					this.debug('ref', 'already-declared-and-exported:', possibleRename || refName)
 				}
-				// Already exported as a different name.
+				// Already exported as an alias.
 				else {
-					let newName = this.findOtherAliasName(origRefSymbol, refName) as string
-					newName = this.maybeTypeOf(newName, ref)
+					let aliasName =
+						this.exportRenames.get(origRefSymbol) || (this.findOtherAliasName(origRefSymbol, refName) as string)
+					aliasName = this.maybeTypeOf(aliasName, ref)
 
-					this.log('ref', 'name-already-exported-as-alias:', newName)
-					pushDeep(symbolReplacements, declarationIndex, { replace: ref, by: newName })
+					this.debug('ref', 'already-exported-as-alias:', aliasName)
+					pushDeep(symbolReplacements, declarationIndex, { replace: ref, by: aliasName })
 				}
 				continue
 			}
@@ -272,7 +343,7 @@ export class DeclarationCollector {
 				// Retrieve the right name in case of default export.
 				const refPropOrigName =
 					refPropOrigSymbol.escapedName === ts.InternalSymbolName.Default
-						? getDeclarationNameText(refPropOrigSymbol.declarations[0])
+						? getDeclarationName(refPropOrigSymbol.declarations[0])
 						: refPropOrigSymbol.escapedName
 
 				if (!refPropOrigName || refPropOrigName === ts.InternalSymbolName.Default) {
@@ -282,25 +353,26 @@ export class DeclarationCollector {
 				// Property symbol already exported elsewhere from the entry file.
 				if (this.symbols.origSymbols.has(refPropOrigSymbol)) {
 					// Exported as the same name.
-					if (this.symbols.exportNames.has(refPropOrigName)) {
-						const newName = this.maybeTypeOf(refPropOrigName, ref)
+					if (this.nameIsAlreadyExported(refPropOrigName)) {
+						const possibleExportRename = this.exportRenames.get(refPropOrigSymbol)
+						const newName = this.maybeTypeOf(possibleExportRename || refPropOrigName, ref)
 
-						this.log('ref', 'prop-name-already-exported-to-reuse:', newName)
+						this.debug('ref', 'prop-already-exported-to-reuse:', newName)
 						pushDeep(symbolReplacements, declarationIndex, { replace: refRoot, by: newName })
 					}
 					// Exported as a different name, which we're looking for.
 					else {
-						let newName = this.findOtherAliasName(refPropOrigSymbol, refPropOrigName) as string
-						newName = this.maybeTypeOf(newName, ref)
+						let aliasName = this.findOtherAliasName(refPropOrigSymbol, refPropOrigName) as string
+						aliasName = this.maybeTypeOf(aliasName, ref)
 
-						this.log('ref', 'prop-name-already-exported-as-alias-to-reuse:', newName)
-						pushDeep(symbolReplacements, declarationIndex, { replace: refRoot, by: newName })
+						this.debug('ref', 'prop-already-exported-as-alias-to-reuse:', aliasName)
+						pushDeep(symbolReplacements, declarationIndex, { replace: refRoot, by: aliasName })
 					}
 				}
 				// Property symbol not exported, so we need to declare it.
 				else {
 					const newName = this.maybeTypeOf(refPropOrigName, ref)
-					this.log('ref', 'prop-name-to-write:', newName)
+					this.debug('ref', 'prop-to-declare:', newName)
 
 					pushDeep(symbolReplacements, declarationIndex, { replace: refRoot, by: newName })
 					this.declarations.registerInternal(refPropOrigSymbol, refSourceFile, { default: false, export: false })
@@ -309,14 +381,13 @@ export class DeclarationCollector {
 				continue
 			}
 
-			// A same name variable already exists in entry file scope (exported symbols are handled before).
-			if (this.symbols.globalNames.includes(refName)) {
+			if (this.nameIsAlreadyGlobal(refName)) {
 				// We want suffix to start at 1, but indexes start at 0, so we make sure to add 1 each time.
 				let suffix: number
 
 				// Name has also already been declared by another reference.
-				if (this.refNamesDeclared.has(refName)) {
-					const sameNameSymbols = this.refNamesDeclared.get(refName)!
+				if (this.refsDeclared.has(refName)) {
+					const sameNameSymbols = this.refsDeclared.get(refName)!
 					const symbolIndex = sameNameSymbols.indexOf(origRefSymbol)
 
 					// Symbol found, we use its index to build the suffix.
@@ -327,17 +398,17 @@ export class DeclarationCollector {
 					// Symbol not declared before, so we assign a suffix and keep its reference.
 					else {
 						suffix = sameNameSymbols.push(origRefSymbol)
-						this.refNamesDeclared.set(refName, sameNameSymbols)
+						this.refsDeclared.set(refName, sameNameSymbols)
 					}
 				}
 				// First time a reference with this name is declared.
 				else {
 					suffix = 1
-					this.refNamesDeclared.set(refName, [origRefSymbol])
+					this.refsDeclared.set(refName, [origRefSymbol])
 				}
 
 				const newRefName = origRefName + '_' + suffix
-				this.log('ref', 'name-in-global-scope:', refName, '| name-to-write:', newRefName)
+				this.debug('ref', 'already-global:', refName, '| to-declare:', newRefName)
 
 				pushDeep(symbolReplacements, declarationIndex, { replace: ref, by: newRefName })
 				this.declarations.registerInternal(origRefSymbol, refSourceFile, {
@@ -346,18 +417,19 @@ export class DeclarationCollector {
 					newName: newRefName,
 					symbolReplacements: subSymbolReplacements,
 				})
+
 				continue
 			}
 
 			// Name has already been declared by another reference.
-			if (this.refNamesDeclared.has(refName)) {
+			if (this.refsDeclared.has(refName)) {
 				let newRefName: string | undefined
-				const sameNameSymbols = this.refNamesDeclared.get(refName)!
+				const sameNameSymbols = this.refsDeclared.get(refName)!
 				const symbolIndex = sameNameSymbols.indexOf(origRefSymbol)
 
 				// Symbol indexed at 0 is the first one declared, no need to suffix it.
 				if (symbolIndex === 0) {
-					this.log('ref', 'name-to-reuse:', refName)
+					this.debug('ref', 'to-reuse:', refName)
 				}
 
 				// Symbol not found, so it's another symbol with the same name, and we suffix it.
@@ -367,14 +439,13 @@ export class DeclarationCollector {
 					newRefName = `${refName}_${suffix}`
 
 					while (this.nameIsAlreadyUsed(newRefName)) {
-						this.log('ref', 'name-suffixed-would-conflict:', newRefName)
-						suffix++
-						newRefName = `${refName}_${suffix}`
+						this.debug('ref', 'name-suffixed-would-conflict:', newRefName)
+						newRefName = `${refName}_${++suffix}`
 					}
-					this.log('ref', 'name-already-in-use:', refName, '| ref-suffixed-to-write:', newRefName)
+					this.debug('ref', 'already-in-use:', refName, '| name-suffixed-to-declare:', newRefName)
 
 					sameNameSymbols[suffix] = origRefSymbol
-					this.refNamesDeclared.set(refName, sameNameSymbols)
+					this.refsDeclared.set(refName, sameNameSymbols)
 
 					pushDeep(symbolReplacements, declarationIndex, { replace: ref, by: newRefName })
 				}
@@ -384,7 +455,7 @@ export class DeclarationCollector {
 					const suffix = symbolIndex
 
 					newRefName = `${refName}_${suffix}`
-					this.log('ref', 'name-suffixed-to-reuse:', newRefName)
+					this.debug('ref', 'name-suffixed-to-reuse:', newRefName)
 
 					pushDeep(symbolReplacements, declarationIndex, { replace: ref, by: newRefName })
 				}
@@ -399,9 +470,9 @@ export class DeclarationCollector {
 
 			// Reference name is used for the first time, so we keep a reference to it, for the first condition above.
 			else {
-				this.refNamesDeclared.set(refName, [origRefSymbol])
+				this.refsDeclared.set(refName, [origRefSymbol])
 
-				this.log('ref', 'name-to-write:', refName)
+				this.debug('ref', 'to-declare:', refName)
 				this.declarations.registerInternal(origRefSymbol, refSourceFile, {
 					default: false,
 					export: false,
@@ -435,16 +506,24 @@ export class DeclarationCollector {
 		this.declarations.registerExternal(symbol, importKind, importName, relativePath, reExport)
 	}
 
+	private nameIsAlreadyExported(name: string | ts.__String): boolean {
+		return this.symbols.exportNames.has(name as ts.__String)
+	}
+
+	private nameIsAlreadyGlobal(name: string | ts.__String): boolean {
+		return this.symbols.globalNames.includes(name as ts.__String)
+	}
+
+	private nameIsAlreadyUsed(name: string | ts.__String): boolean {
+		return this.nameIsAlreadyExported(name) || this.nameIsAlreadyGlobal(name)
+	}
+
 	private maybeTypeOf(name: ts.__String | string, ref: ts.Identifier | ts.ImportTypeNode): string {
 		return ts.isImportTypeNode(ref) && ref.isTypeOf ? `typeof ${name}` : (name as string)
 	}
 
-	private nameIsAlreadyUsed(name: string): boolean {
-		return this.symbols.exportNames.has(name as ts.__String) || this.symbols.globalNames.includes(name as ts.__String)
-	}
-
-	private log(subject: 'ref', ...messages: any[]) {
-		if (this.debug) console.log(`[${subject.toUpperCase()}]`, ...messages)
+	private debug(subject: 'export' | 'ref', ...messages: any[]) {
+		if (this.debugSwitch) console.log(`[${subject.toUpperCase()}]`, ...messages)
 	}
 
 	//
@@ -465,11 +544,11 @@ export class DeclarationCollector {
 		let aliasName: ts.__String | undefined = aliasSymbol.escapedName
 
 		if (aliasName === ts.InternalSymbolName.Default) {
-			aliasName = getDeclarationNameText(aliasSymbol.declarations[0])
+			aliasName = getDeclarationName(aliasSymbol.declarations[0])
 		}
 
 		if (aliasName === ts.InternalSymbolName.Default) {
-			aliasName = getDeclarationNameText(origAliasSymbol.declarations[0])
+			aliasName = getDeclarationName(origAliasSymbol.declarations[0])
 		}
 
 		if (!aliasName || aliasName === ts.InternalSymbolName.Default) {

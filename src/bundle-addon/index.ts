@@ -73,7 +73,7 @@ export function bundleDts(
 	} catch (error) {
 		if (!fallbackOnError) throw Color.red(error)
 
-		console.error(Color.red(error))
+		console.error(Color.red(error.stack))
 		console.log('Fallback to original declaration files')
 
 		dtsCache.forEach((data, path) => ts.sys.writeFile(path, data))

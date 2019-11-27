@@ -107,7 +107,7 @@ export function getDeclarationIdentifier(node: ts.Declaration | ts.Expression): 
  * Try to get A in `export default A`.
  * @internal
  */
-export function getDeclarationNameText(node: ts.Declaration): ts.__String | undefined {
+export function getDeclarationName(node: ts.Declaration): ts.__String | undefined {
 	const name = ts.getNameOfDeclaration(node)
 	return name && ts.isIdentifier(name) ? name.escapedText : undefined
 }

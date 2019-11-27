@@ -234,36 +234,17 @@ export class SymbolCollector {
 		return entryFilePositions
 	}
 
+	/**
+	 * Not always reliable, since we also get global symbols from dev packages like jest (`it`).
+	 * @see https://github.com/microsoft/rushstack/issues/1316
+	 * @see https://github.com/rbuckton/typedoc-plugin-biblio/blob/master/src/plugin.ts
+	 */
 	private getGlobalSymbols(): ts.Symbol[] {
-		const globalSymbols: ts.Symbol[] = []
+		const allSourceFiles = this.program.getSourceFiles()
+		const globalSourceFile =
+			allSourceFiles.find((sf) => sf.hasNoDefaultLib) || allSourceFiles.find((sf) => !ts.isExternalModule(sf))
 
-		// in-scope symbols = global symbols + symbols declared in the entry file.
-		const inScopeSymbols = this.checker.getSymbolsInScope(this.entryFile, -1)
-
-		for (const symbol of inScopeSymbols) {
-			// Default `globalThis` symbol has no declaration.
-			if (symbol.escapedName === 'globalThis' && !symbol.declarations) {
-				globalSymbols.push(symbol)
-				continue
-			}
-
-			// Default `undefined` symbol has no declaration.
-			if (!symbol.declarations || !symbol.declarations[0]) {
-				globalSymbols.push(symbol)
-				continue
-			}
-
-			const sourceFile = symbol.declarations[0].getSourceFile()
-
-			const isDefault = this.program.isSourceFileDefaultLibrary(sourceFile)
-			const isExternal = this.program.isSourceFileFromExternalLibrary(sourceFile)
-
-			if (isDefault || isExternal) {
-				globalSymbols.push(symbol)
-			}
-		}
-
-		return globalSymbols
+		return this.checker.getSymbolsInScope(globalSourceFile!, -1)
 	}
 
 	/**
