@@ -15,11 +15,12 @@ export function print(collections: (Set<string> | Map<string, string>)[], newLin
 		if (collection instanceof Map) {
 			for (const [declaration, comment] of collection) {
 				if (comment) stringBuilder.addLine(comment)
-				stringBuilder.addLine(declaration)
-				stringBuilder.addLine()
+				stringBuilder.addLine(declaration).addLine()
 			}
 		}
 	}
+
+	stringBuilder.addLine('export {}')
 
 	return stringBuilder.toString()
 }
@@ -46,13 +47,14 @@ class StringBuilder {
 				: (ts.sys.newLine as '\r\n' | '\n')
 	}
 
-	add(text: string): void {
+	add(text: string) {
 		this.chunks.push(text)
+		return this
 	}
 
-	addLine(text: string = ''): void {
+	addLine(text: string = '') {
 		if (text.length > 0) this.add(text)
-		this.add(this.newLine)
+		return this.add(this.newLine)
 	}
 
 	toString(): string {
