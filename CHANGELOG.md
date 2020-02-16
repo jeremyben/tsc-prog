@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.1](https://github.com/jeremyben/tsc-prog/compare/v2.1.0...v2.1.1) (2020-02-16)
+
+
+### Bug Fixes
+
+* **bundle:** properly hide non exported declarations ([ec1a760](https://github.com/jeremyben/tsc-prog/commit/ec1a760af87687ee819fcf2029cd68934d92bdb5))
+
 ## [2.1.0](https://github.com/jeremyben/tsc-prog/compare/v2.0.3...v2.1.0) (2019-11-27)
 
 
