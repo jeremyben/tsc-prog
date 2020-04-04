@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/jeremyben/tsc-prog/compare/v2.1.1...v2.2.0) (2020-04-04)
+
+
+### Features
+
+* bundle globals and external library augmentations with options to switch off ([644784e](https://github.com/jeremyben/tsc-prog/commit/644784e5d41f196492163f571a25c97c53108ee1))
+
 ### [2.1.1](https://github.com/jeremyben/tsc-prog/compare/v2.1.0...v2.1.1) (2020-02-16)
 
 
