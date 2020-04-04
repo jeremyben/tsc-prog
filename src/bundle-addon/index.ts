@@ -1,8 +1,8 @@
 import ts from 'typescript'
 import { EmitOptions } from '../interfaces'
 import { Color } from '../utils/log'
-import { join } from 'path'
 import { collectDirectives } from './directive-collector'
+import { collectExternalAugmentations } from './external-augmentation-collector'
 import { SymbolCollector } from './symbol-collector'
 import { DeclarationCollector } from './declaration-collector'
 import { print } from './printer'
@@ -35,7 +35,12 @@ export function getDtsInterceptor(dtsCache: Map<string, string>) {
 export function bundleDts(
 	program: ts.Program,
 	dtsCache: Map<string, string>,
-	{ entryPoint, fallbackOnError = true }: Required<EmitOptions>['bundleDeclaration']
+	{
+		entryPoint,
+		fallbackOnError = true,
+		globals: globalsOption = true,
+		augmentations: augmentationsOption = true,
+	}: Required<EmitOptions>['bundleDeclaration']
 ) {
 	const dtsOutDir = getDtsOutDir(program)
 	const dtsProgram = createDtsProgram(program, dtsCache)
@@ -55,17 +60,29 @@ export function bundleDts(
 				if (!entryFile) throw Error('Unable to load entry point:' + path)
 
 				const directives = collectDirectives(dtsProgram)
+				const augmentations = augmentationsOption ? collectExternalAugmentations(dtsProgram) : undefined
 				const symbols = new SymbolCollector(entryFile, dtsProgram)
-				const { declarations } = new DeclarationCollector(symbols, entryFile, dtsProgram)
-
-				const bundled = print(
-					[directives.typeRef, directives.libRef, declarations.imports, declarations.exports],
-					dtsOptions.newLine
+				const { declarations } = new DeclarationCollector(
+					symbols,
+					entryFile,
+					dtsProgram,
+					globalsOption,
+					augmentationsOption
 				)
+
+				const bundled = print({
+					importsCollections: [directives.typeRef, directives.libRef, declarations.imports],
+					exportsCollection: declarations.exports,
+					globalsCollection: globalsOption ? declarations.globals : undefined,
+					augmentationsCollection: augmentations,
+					newLine: dtsOptions.newLine,
+				})
 
 				return [path, bundled] as const
 			})
-			.forEach(([path, bundled]) => ts.sys.writeFile(path, bundled))
+			.forEach(([path, bundled]) => {
+				ts.sys.writeFile(path, bundled)
+			})
 
 		if (dtsOptions.listEmittedFiles) {
 			console.log('Emitted files:\n' + entryPoints.join('\n'))

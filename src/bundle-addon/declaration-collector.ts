@@ -3,7 +3,14 @@ import { Color } from '../utils/log'
 import { pushDeep, MapEntry } from '../utils/manipulation'
 import { Reference, SymbolCollector } from './symbol-collector'
 import { DeclarationRegistrar, Replacement } from './declaration-registrar'
-import { getModuleSpecifier, getModuleNameFromSpecifier, getDeclarationName, lookForProperty } from './syntax-retrieval'
+import { isExternalLibraryAugmentation } from './syntax-check'
+import {
+	getModuleSpecifier,
+	getModuleNameFromSpecifier,
+	getDeclarationName,
+	lookForProperty,
+	findFirstParent,
+} from './syntax-retrieval'
 
 /**
  * @internal
@@ -31,18 +38,27 @@ export class DeclarationCollector {
 	private checker: ts.TypeChecker
 	private entryFile: ts.SourceFile
 
+	private globalsOption: boolean
+	private augmentationsOption: boolean
+
 	private debugSwitch = false
 
-	constructor(symbols: SymbolCollector, entryFile: ts.SourceFile, program: ts.Program) {
+	constructor(
+		symbols: SymbolCollector,
+		entryFile: ts.SourceFile,
+		program: ts.Program,
+		globalsOption = true,
+		augmentationsOption = true
+	) {
 		this.program = program
 		this.checker = program.getTypeChecker()
 		this.entryFile = entryFile
 		this.symbols = symbols
+		this.globalsOption = globalsOption
+		this.augmentationsOption = augmentationsOption
 		this.refsDeclared = new Map<ts.__String, ts.Symbol[]>()
 		this.declarations = new DeclarationRegistrar()
 		this.exportRenames = this.getExportRenames(this.symbols.exportSymbols)
-
-		// console.log(this.exportRenames)
 
 		for (const moduleName of this.symbols.externalStarModuleNames) {
 			this.declarations.registerStar(moduleName)
@@ -50,6 +66,13 @@ export class DeclarationCollector {
 
 		for (const exportSymbol of this.symbols.exportSymbols) {
 			this.collectExports(exportSymbol)
+		}
+
+		if (this.globalsOption) {
+			for (const internalGlobalSymbol of this.symbols.internalGlobalSymbols) {
+				this.debug('internal-global', internalGlobalSymbol.name)
+				this.declarations.registerGlobal(internalGlobalSymbol)
+			}
 		}
 	}
 
@@ -115,6 +138,13 @@ export class DeclarationCollector {
 			return
 		}
 
+		// External module augmentations are not detected as external, and would be duplicated.
+		if (this.shouldHandleExternalAugmentation(origSymbol.declarations[0])) {
+			this.debug('export', 'is-augmentation-of-external-lib:', exportName)
+			this.handleSymbolFromExternalLibrary(exportSymbol, true)
+			return
+		}
+
 		//
 		// ═════════ Internal ═════════
 		//
@@ -137,11 +167,12 @@ export class DeclarationCollector {
 
 			// Default symbol is a variable value, and must be declared first before being exported as default.
 			// If the value was exported as is, an intermediary variable named '_default' was created by the compiler.
+			// todo: default namespace and type
 			if (origSymbol.flags & ts.SymbolFlags.Variable) {
 				const exportRealName = getDeclarationName(exportSymbol.declarations[0])
 
 				this.debug('export', 'default-variable-to-declare:', exportRealName || origName)
-				this.declarations.registerInternal(origSymbol, sourceFile, {
+				this.declarations.registerInternal(origSymbol, {
 					default: false,
 					export: false,
 					newName: exportRealName,
@@ -150,7 +181,7 @@ export class DeclarationCollector {
 				this.declarations.registerAlias(exportRealName || origName, { default: true })
 			} else {
 				this.debug('export', 'default-to-declare:', origName)
-				this.declarations.registerInternal(origSymbol, sourceFile, { export: true, default: true, symbolReplacements })
+				this.declarations.registerInternal(origSymbol, { export: true, default: true, symbolReplacements })
 			}
 
 			return
@@ -166,7 +197,7 @@ export class DeclarationCollector {
 			if (exportRename) {
 				// Name is already used by a global symbol.
 				this.debug('export', 'already-global:', exportName, '| to-declare-then-reexport-as:', exportRename)
-				this.declarations.registerInternal(origSymbol, sourceFile, {
+				this.declarations.registerInternal(origSymbol, {
 					export: false,
 					default: false,
 					newName: exportRename,
@@ -176,7 +207,7 @@ export class DeclarationCollector {
 			} else {
 				// Usual case.
 				this.debug('export', 'original-name-to-declare:', exportName)
-				this.declarations.registerInternal(origSymbol, sourceFile, { export: true, default: false, symbolReplacements })
+				this.declarations.registerInternal(origSymbol, { export: true, default: false, symbolReplacements })
 			}
 
 			// Symbol is also exported as different aliases.
@@ -202,7 +233,7 @@ export class DeclarationCollector {
 			if (exportRename) {
 				// Name is already used by a global symbol.
 				this.debug('export', 'aliased-name-already-global:', exportName, '| to-declare-then-reexport:', exportRename)
-				this.declarations.registerInternal(origSymbol, sourceFile, {
+				this.declarations.registerInternal(origSymbol, {
 					export: false,
 					default: false,
 					newName: exportRename,
@@ -212,7 +243,7 @@ export class DeclarationCollector {
 			} else {
 				// Usual case.
 				this.debug('export', 'aliased-name-to-declare:', exportName)
-				this.declarations.registerInternal(origSymbol, sourceFile, {
+				this.declarations.registerInternal(origSymbol, {
 					export: true,
 					default: false,
 					newName: exportName,
@@ -256,13 +287,15 @@ export class DeclarationCollector {
 				continue
 			}
 
-			const refSourceFile = origRefSymbol.declarations[0].getSourceFile()
-
 			//
 			// ═════════ Global ═════════
 			//
 
-			if (this.symbols.globalSymbols.includes(origRefSymbol)) {
+			if (
+				this.symbols.globalSymbols.includes(origRefSymbol) &&
+				// Redeclare internal global references if the global option is off.
+				(this.globalsOption || (!this.globalsOption && !this.symbols.internalGlobalSymbols.includes(origRefSymbol)))
+			) {
 				this.debug('ref', 'is-global:', refName)
 				continue
 			}
@@ -271,6 +304,8 @@ export class DeclarationCollector {
 			// ═════════ External/JSON ═════════
 			//
 			// Don't have to rewrite external import type nodes: `import('lib').A`.
+
+			const refSourceFile = origRefSymbol.declarations[0].getSourceFile()
 
 			if (this.program.isSourceFileFromExternalLibrary(refSourceFile)) {
 				if (ts.isImportTypeNode(ref)) continue
@@ -283,6 +318,14 @@ export class DeclarationCollector {
 				if (ts.isImportTypeNode(ref)) continue
 				this.debug('ref', 'is-from-json-file:', refName)
 				this.handleSymbolFromJsonFile(refSymbol, refSourceFile)
+				continue
+			}
+
+			// External module augmentations are not detected as external, and would be duplicated.
+			if (this.shouldHandleExternalAugmentation(origRefSymbol.declarations[0])) {
+				if (ts.isImportTypeNode(ref)) continue
+				this.debug('ref', 'is-augmentation-of-external-lib:', refName)
+				this.handleSymbolFromExternalLibrary(refSymbol)
 				continue
 			}
 
@@ -375,7 +418,7 @@ export class DeclarationCollector {
 					this.debug('ref', 'prop-to-declare:', newName)
 
 					pushDeep(symbolReplacements, declarationIndex, { replace: refRoot, by: newName })
-					this.declarations.registerInternal(refPropOrigSymbol, refSourceFile, { default: false, export: false })
+					this.declarations.registerInternal(refPropOrigSymbol, { default: false, export: false })
 				}
 
 				continue
@@ -411,7 +454,7 @@ export class DeclarationCollector {
 				this.debug('ref', 'already-global:', refName, '| to-declare:', newRefName)
 
 				pushDeep(symbolReplacements, declarationIndex, { replace: ref, by: newRefName })
-				this.declarations.registerInternal(origRefSymbol, refSourceFile, {
+				this.declarations.registerInternal(origRefSymbol, {
 					default: false,
 					export: false,
 					newName: newRefName,
@@ -460,7 +503,7 @@ export class DeclarationCollector {
 					pushDeep(symbolReplacements, declarationIndex, { replace: ref, by: newRefName })
 				}
 
-				this.declarations.registerInternal(origRefSymbol, refSourceFile, {
+				this.declarations.registerInternal(origRefSymbol, {
 					default: false,
 					export: false,
 					newName: newRefName /* may be undefined */,
@@ -473,7 +516,7 @@ export class DeclarationCollector {
 				this.refsDeclared.set(refName, [origRefSymbol])
 
 				this.debug('ref', 'to-declare:', refName)
-				this.declarations.registerInternal(origRefSymbol, refSourceFile, {
+				this.declarations.registerInternal(origRefSymbol, {
 					default: false,
 					export: false,
 					// Declare the reference as the right name
@@ -522,7 +565,12 @@ export class DeclarationCollector {
 		return ts.isImportTypeNode(ref) && ref.isTypeOf ? `typeof ${name}` : (name as string)
 	}
 
-	private debug(subject: 'export' | 'ref', ...messages: any[]) {
+	private shouldHandleExternalAugmentation(declaration: ts.Declaration): boolean {
+		if (!this.augmentationsOption) return false
+		return !!findFirstParent(declaration, isExternalLibraryAugmentation)
+	}
+
+	private debug(subject: 'export' | 'ref' | 'internal-global', ...messages: any[]) {
 		if (this.debugSwitch) console.log(`[${subject.toUpperCase()}]`, ...messages)
 	}
 
@@ -597,10 +645,11 @@ export class DeclarationCollector {
 				throw Error('Could not find module name: ' + moduleSpecifier.getText()) // Should not happen
 			}
 
-			const sourceFile = moduleSymbol.declarations[0].getSourceFile()
+			// We need to check every declaration because of augmentations that could lead to false negatives.
+			// Ex: the predicate `isSourceFileFromExternalLibrary` on a module augmentation declaration (internal).
+			const found = moduleSymbol.declarations.some((d) => predicate(d.getSourceFile()))
 
-			// We found the guy.
-			if (predicate(sourceFile)) {
+			if (found) {
 				let importName = symbol.escapedName
 				const importKind = firstDeclaration.kind
 

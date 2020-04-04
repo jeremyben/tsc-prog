@@ -21,15 +21,16 @@ export type Replacement = {
 export class DeclarationRegistrar {
 	imports: Set<string>
 	exports: Map<string, string>
+	globals: Map<string, string>
 
 	constructor() {
 		this.imports = new Set<string>()
 		this.exports = new Map<string, string>()
+		this.globals = new Map<string, string>()
 	}
 
 	registerInternal(
 		origSymbol: ts.Symbol,
-		sourceFile: ts.SourceFile,
 		options: {
 			export: boolean
 			default: boolean
@@ -49,14 +50,14 @@ export class DeclarationRegistrar {
 			const declaration = origSymbol.declarations[index]
 			const declarationReplacements = symbolReplacements[index]
 
-			const declarationText = this.getDeclarationText(declaration, sourceFile, {
+			const declarationText = this.getDeclarationText(declaration, {
 				newName,
 				replacements: declarationReplacements,
 				exportKeyword,
 				defaultKeyword,
 			})
 
-			const jsdocText = this.getJSDocComment(declaration, sourceFile)
+			const jsdocText = this.getJSDocComment(declaration)
 
 			this.exports.set(declarationText, jsdocText)
 		}
@@ -130,12 +131,39 @@ export class DeclarationRegistrar {
 		this.exports.set(`export * from "${modulePath}";`, '')
 	}
 
+	registerGlobal(origSymbol: ts.Symbol) {
+		for (const declaration of origSymbol.declarations) {
+			const sourceFile = declaration.getSourceFile()
+
+			let declarationText = declaration.getText(sourceFile)
+
+			// Remove `declare` keyword of individual declarations.
+			const declareModifier = getModifier(declaration, ts.SyntaxKind.DeclareKeyword)
+
+			if (declareModifier) {
+				const start = declareModifier.getStart(sourceFile) - declaration.getStart(sourceFile)
+				const end = declareModifier.getEnd() - declaration.getStart(sourceFile)
+
+				strictEqual(
+					declarationText.slice(start, end),
+					declareModifier.getText(sourceFile),
+					`Declare modifier not found at start:${start} - end:${end}`
+				)
+
+				declarationText = declarationText.slice(0, start) + declarationText.slice(end + 1)
+			}
+
+			const jsdocText = this.getJSDocComment(declaration)
+
+			this.globals.set(declarationText, jsdocText)
+		}
+	}
+
 	/**
 	 * Retrieves declaration text and applies changes on-the-fly.
 	 */
 	private getDeclarationText(
 		declaration: ts.Declaration,
-		sourceFile: ts.SourceFile = declaration.getSourceFile(),
 		options: {
 			newName?: ts.__String | string
 			replacements?: Replacement[]
@@ -144,6 +172,7 @@ export class DeclarationRegistrar {
 		} = {}
 	): string {
 		const { newName, defaultKeyword, exportKeyword, replacements = [] } = options
+		const sourceFile = declaration.getSourceFile()
 		let text = declaration.getText(sourceFile)
 		let prefix = ''
 
@@ -300,6 +329,17 @@ export class DeclarationRegistrar {
 				)
 
 				text = text.slice(0, start) + text.slice(end + 1)
+			}
+
+			// Declarations from module augmentations lack a declare keyword (they don't have export and default keywords either).
+			if (
+				!declareModifier &&
+				!exportModifier &&
+				!defaultModifier &&
+				defaultKeyword !== true &&
+				!ts.isInterfaceDeclaration(declaration)
+			) {
+				prefix += 'declare '
 			}
 		}
 

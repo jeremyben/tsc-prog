@@ -22,7 +22,7 @@ export function lookForProperty(ref: ts.Identifier | ts.ImportTypeNode) {
 
 		if (!refProp) return
 	} else {
-		refRoot = findFirstParent<ts.QualifiedName>(ref, ts.SyntaxKind.QualifiedName)
+		refRoot = findFirstParent(ref, ts.isQualifiedName)
 		if (!refRoot) return
 
 		refProp = refRoot.right
@@ -37,13 +37,13 @@ export function lookForProperty(ref: ts.Identifier | ts.ImportTypeNode) {
  */
 export function findFirstChild<T extends ts.Node>(
 	node: ts.Node,
-	kind: ts.SyntaxKind,
+	predicate: (childNode: ts.Node) => childNode is T,
 	sourceFile = node.getSourceFile()
 ): T | undefined {
 	for (const child of node.getChildren(sourceFile)) {
-		if (child.kind === kind) return child as T
+		if (predicate(child)) return child as T
 
-		const grandChild = findFirstChild(child, kind, sourceFile)
+		const grandChild = findFirstChild(child, predicate, sourceFile)
 		if (grandChild) return grandChild as T
 	}
 
@@ -53,11 +53,14 @@ export function findFirstChild<T extends ts.Node>(
 /**
  * @internal
  */
-export function findFirstParent<T extends ts.Node>(node: ts.Node, kind: ts.SyntaxKind): T | undefined {
+export function findFirstParent<T extends ts.Node>(
+	node: ts.Node,
+	predicate: (parentNode: ts.Node) => parentNode is T
+): T | undefined {
 	let current: ts.Node | undefined = node.parent
 
 	while (current) {
-		if (current.kind === kind) return current as T
+		if (predicate(current)) return current as T
 		current = current.parent
 	}
 

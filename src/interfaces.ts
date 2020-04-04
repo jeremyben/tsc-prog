@@ -60,10 +60,37 @@ export interface EmitOptions {
 
 		/**
 		 * If any error happens during bundling, fallback to original declaration files.
+		 *
+		 * Switch to `false` to disable this behavior.
 		 * @default true
 		 */
 		fallbackOnError?: boolean
 
+		/**
+		 * Keep global declarations in the bundle, e.g.
+		 * ```ts
+		 * declare global {
+		 *   interface IGlobal {}
+		 * }
+		 * ```
+		 *
+		 * Switch to `false` to disable this behavior.
+		 * @default true
+		 */
+		globals?: boolean
+
+		/**
+		 * Keep external library augmentations in the bundle, e.g.
+		 * ```ts
+		 * declare module 'library' {
+		 *   interface IMerged {}
+		 * }
+		 * ```
+		 *
+		 * Switch to `false` to disable this behavior.
+		 * @default true
+		 */
+		augmentations?: boolean
 	}
 }
 

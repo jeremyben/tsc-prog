@@ -52,13 +52,17 @@ declare module 'typescript' {
 	function isAmbientModule(node: Node): node is AmbientModuleDeclaration
 
 	/**
+	 * `declare global`
 	 * @see https://github.com/Microsoft/TypeScript/blob/v3.6.4/src/compiler/utilities.ts#L678-L680
 	 * @internal
 	 */
 	function isGlobalScopeAugmentation(module: ModuleDeclaration): boolean
 
 	/**
-	 * `declare module "name"`
+	 * External module augmentation is a ambient module declaration that is either:
+	 * - defined in the top level scope and source file is an external module
+	 * - defined inside ambient module declaration located in the top level scope and source file not an external module
+	 *
 	 * @see https://github.com/Microsoft/TypeScript/blob/v3.6.4/src/compiler/utilities.ts#L682-L684
 	 * @internal
 	 */
@@ -214,6 +218,16 @@ declare module 'typescript' {
 		 * @internal
 		 */
 		imports: ReadonlyArray<StringLiteralLike>
+
+		/**
+		 * The first "most obvious" node that makes a file an external module.
+		 * This is intended to be the first top-level import/export,
+		 * but could be arbitrarily nested (e.g. `import.meta`).
+		 *
+		 * @see https://github.com/microsoft/TypeScript/blob/v3.6.4/src/compiler/types.ts#L2739
+		 * @internal
+		 */
+		externalModuleIndicator?: Node
 
 		/**
 		 * @see https://github.com/microsoft/TypeScript/blob/v3.6.4/src/compiler/types.ts#L2775

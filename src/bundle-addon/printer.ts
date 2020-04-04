@@ -3,20 +3,47 @@ import ts from 'typescript'
 /**
  * @internal
  */
-export function print(collections: (Set<string> | Map<string, string>)[], newLine?: ts.NewLineKind): string {
+export function print({
+	importsCollections,
+	exportsCollection,
+	globalsCollection,
+	augmentationsCollection,
+	newLine,
+}: {
+	importsCollections: Set<string>[]
+	exportsCollection: Map<string, string>
+	globalsCollection?: Map<string, string>
+	augmentationsCollection?: Set<string>
+	newLine?: ts.NewLineKind
+}): string {
 	const stringBuilder = new StringBuilder(newLine)
 
-	for (const collection of collections) {
-		if (collection instanceof Set) {
-			for (const declaration of collection) stringBuilder.addLine(declaration)
-			if (collection.size) stringBuilder.addLine()
+	for (const importCollection of importsCollections) {
+		for (const declaration of importCollection) {
+			stringBuilder.addLine(declaration)
+		}
+		if (importCollection.size) stringBuilder.addLine()
+	}
+
+	for (const [declaration, comment] of exportsCollection) {
+		if (comment) stringBuilder.addLine(comment)
+		stringBuilder.addLine(declaration).addLine()
+	}
+
+	if (globalsCollection?.size) {
+		stringBuilder.addLine('declare global {')
+
+		for (const [declaration, comment] of globalsCollection) {
+			if (comment) stringBuilder.addLine(comment)
+			stringBuilder.addLine(declaration)
 		}
 
-		if (collection instanceof Map) {
-			for (const [declaration, comment] of collection) {
-				if (comment) stringBuilder.addLine(comment)
-				stringBuilder.addLine(declaration).addLine()
-			}
+		stringBuilder.addLine('}').addLine()
+	}
+
+	if (augmentationsCollection?.size) {
+		for (const declaration of augmentationsCollection) {
+			stringBuilder.addLine(declaration).addLine()
 		}
 	}
 

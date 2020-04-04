@@ -129,12 +129,29 @@ tsc.build({
 	},
 	bundleDeclaration: {
 		entryPoint: 'index.d.ts', // relative to the OUTPUT directory ('dist' here)
-		fallbackOnError: false, // default: true
 	},
 })
 ```
 
-The `fallbackOnError` option is a safety mecanism that generates the original unbundled definition files if any error happens during the bundling process.
+#### Bundling options
+
+```js
+tsc.build({
+	// ...
+	bundleDeclaration: {
+		entryPoint: 'index.d.ts',
+		fallbackOnError: false, // default: true
+		globals: false // default: true
+		augmentations: false // default: true
+	}
+})
+```
+
+- `fallbackOnError` option is a safety mecanism that generates the original unbundled definition files if any error happens during the bundling process.
+
+- `globals` option can be switched to `false` to discard global declarations.
+
+- `augmentations` option can be switched to `false` to discard external library augmentations.
 
 #### Notes on bundling 🗣️
 

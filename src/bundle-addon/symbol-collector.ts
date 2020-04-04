@@ -24,6 +24,7 @@ export class SymbolCollector {
 	origSymbols: Set<ts.Symbol>
 	globalSymbols: ts.Symbol[]
 	globalNames: ts.__String[]
+	internalGlobalSymbols: ts.Symbol[]
 
 	private program: ts.Program
 	private checker: ts.TypeChecker
@@ -34,7 +35,10 @@ export class SymbolCollector {
 		this.program = program
 		this.checker = program.getTypeChecker()
 		this.entryFile = entryFile
-		this.entrySymbol = this.checker.getSymbolAtLocation(this.entryFile)!
+
+		const entrySymbol = this.checker.getSymbolAtLocation(this.entryFile)
+		if (!entrySymbol) throw Error('Entry point is not a module (no export/import declaration).')
+		this.entrySymbol = entrySymbol
 
 		const { externalStarExports, externalStarModuleNames } = this.getExternalStarExports()
 		const entryExports = this.getModuleExports(externalStarExports)
@@ -42,21 +46,22 @@ export class SymbolCollector {
 		this.externalStarModuleNames = externalStarModuleNames
 		this.exportSymbols = this.getExportSymbolsMap(entryExports)
 		this.globalSymbols = this.getGlobalSymbols()
+		this.internalGlobalSymbols = this.getInternalGlobalSymbols(this.globalSymbols)
 
 		// Build indexes for easier checks.
-		this.origSymbols = mapToSet(this.exportSymbols, ([origSymbol]) => origSymbol)
-		this.exportNames = mapToSet(
-			this.exportSymbols,
-			(_, s) => s.escapedName,
-			(_, s) => s.escapedName !== ts.InternalSymbolName.Default // Don't index default name.
-		)
+		this.origSymbols = mapToSet(this.exportSymbols, {
+			mapper: ([origSymbol]) => origSymbol,
+		})
+		this.exportNames = mapToSet(this.exportSymbols, {
+			mapper: (_, s) => s.escapedName,
+			filter: (_, s) => s.escapedName !== ts.InternalSymbolName.Default, // Don't index default name.
+		})
 
 		this.globalNames = this.globalSymbols.map((s) => s.escapedName)
 	}
 
 	/**
 	 * Retrieves exported symbols.
-	 * @internal
 	 */
 	private getExportSymbolsMap(moduleExports: ts.Symbol[]) {
 		// Map export symbol to its original one (might be the same), both ways, for indexing and easier retrieving.
@@ -86,7 +91,6 @@ export class SymbolCollector {
 
 	/**
 	 * Retrieves unexported symbols used by exported symbols.
-	 * @internal
 	 */
 	private getReferences(origSymbol: ts.Symbol): Reference[] {
 		// We look in the first declaration to retrieve common source file,
@@ -132,7 +136,7 @@ export class SymbolCollector {
 					ts.isComputedPropertyName(child) || //  [Prop]:
 					ts.isTypeQueryNode(child) // "typeof X"
 				) {
-					const identifier = findFirstChild<ts.Identifier>(child, ts.SyntaxKind.Identifier)
+					const identifier = findFirstChild(child, ts.isIdentifier)
 					if (identifier) {
 						refs.push({ ref: identifier, subrefs: getSubReferences(identifier), declarationIndex })
 					}
@@ -245,6 +249,28 @@ export class SymbolCollector {
 			allSourceFiles.find((sf) => sf.hasNoDefaultLib) || allSourceFiles.find((sf) => !ts.isExternalModule(sf))
 
 		return this.checker.getSymbolsInScope(globalSourceFile!, -1)
+	}
+
+	/**
+	 * Retrieves globals declared internally, either in a `declare global` statement inside a module file,
+	 * or directly with a `declare` statement inside an ambient file (file without import/export).
+	 */
+	private getInternalGlobalSymbols(globalSymbols: ts.Symbol[]): ts.Symbol[] {
+		return globalSymbols.filter((symbol) => {
+			if (!symbol.declarations?.length) return false
+
+			const [firstDeclaration] = symbol.declarations
+
+			// External module augmentations (`declare module 'lib'`) are detected as globals in ambient files.
+			if (ts.isAmbientModule(firstDeclaration)) return false
+
+			const sourceFile = firstDeclaration.getSourceFile()
+
+			return (
+				!this.program.isSourceFileFromExternalLibrary(sourceFile) &&
+				!this.program.isSourceFileDefaultLibrary(sourceFile)
+			)
+		})
 	}
 
 	/**

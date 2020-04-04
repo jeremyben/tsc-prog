@@ -66,10 +66,13 @@ export function isTopLevelNonVariableDeclaration(node: ts.Node): node is TopLeve
 }
 
 /**
- * `declare global`
+ * Accepts ambient declarations like `declare "library"` and not `declare global` or `declare "./relative-module"`.
+ * @internal
  */
-export function isDeclareGlobalStatement(statement: ts.Statement): statement is ts.ModuleDeclaration {
-	return ts.isModuleDeclaration(statement) && ts.isGlobalScopeAugmentation(statement)
+export function isExternalLibraryAugmentation(node: ts.Node): node is ts.AmbientModuleDeclaration {
+	return (
+		ts.isAmbientModule(node) && !ts.isGlobalScopeAugmentation(node) && !ts.isExternalModuleNameRelative(node.name.text)
+	)
 }
 
 export function isTopLevelNamedDeclaration(node: ts.Node): node is TopLevelNamedDeclaration {
@@ -87,6 +90,9 @@ export function isTopLevelNamedDeclaration(node: ts.Node): node is TopLevelNamed
 	}
 }
 
+/**
+ * @internal
+ */
 export function isKeywordTypeNode(node: ts.Node): node is ts.KeywordTypeNode {
 	switch (node.kind) {
 		case ts.SyntaxKind.AnyKeyword:

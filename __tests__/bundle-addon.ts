@@ -59,6 +59,35 @@ test('global name conflict', () => {
 	}
 })
 
+test('ambient declaration', () => {
+	const entryPoint = fixture('ambient-declaration', 'dist', 'main.d.ts')
+
+	build({
+		basePath: fixture('ambient-declaration'),
+		extends: '../tsconfig.json',
+		compilerOptions,
+		clean: { outDir: true },
+		bundleDeclaration: {
+			entryPoint,
+		},
+	})
+
+	const bundled = readFileSync(entryPoint, 'utf8')
+
+	for (const expected of [
+		/^declare global {.*interface GlobalInterface {$/ms,
+		/^declare global {.*namespace GlobalNamespace {$/ms,
+		/^declare module 'os' {$/m,
+		/^declare module 'http' {$/m,
+		/^import { ExternalInterface } from "http";$/m,
+	]) {
+		expect(bundled).toMatch(expected)
+	}
+
+	expect(bundled.match(/namespace GlobalNamespace {$/gm)).toHaveLength(2)
+	expect(bundled.match(/interface InternalInterface {$/gm)).toHaveLength(2)
+})
+
 test.skip('complex', () => {
 	const entryPoint = fixture('complex', 'dist', 'main.d.ts')
 

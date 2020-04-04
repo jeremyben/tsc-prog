@@ -15,8 +15,7 @@ export type EitherOne<T, K = keyof T> = K extends keyof T
  */
 export function mapToSet<K, V, R>(
 	map: Map<K, V>,
-	mapper: (value: V, key: K) => R,
-	filter?: (value: V, key: K) => boolean
+	{ mapper, filter }: { mapper: (value: V, key: K) => R; filter?: (value: V, key: K) => boolean }
 ): Set<R> {
 	const set = new Set<R>()
 
