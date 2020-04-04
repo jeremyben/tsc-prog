@@ -1,4 +1,4 @@
-/** @type {jest.InitialOptions} */
+/** @type {Partial<import('@jest/types').Config.DefaultOptions & { rootDir: string, preset: string }>} */
 const config = {
 	preset: 'ts-jest',
 	testEnvironment: 'node',
