@@ -92,33 +92,18 @@ export class SymbolCollector {
 	/**
 	 * Retrieves unexported symbols used by exported symbols.
 	 */
-	private getReferences(origSymbol: ts.Symbol): Reference[] {
-		// We look in the first declaration to retrieve common source file,
-		// since merged and overloaded declarations are in the same source file.
-		const sourceFile = origSymbol.declarations[0].getSourceFile()
-
+	private getReferences(origSymbol: ts.Symbol, symbolsChain: ts.Symbol[] = []): Reference[] {
 		// Don't search in external symbol declarations.
+		// We need to check every declaration because of augmentations that could lead to false negatives.
 		if (
-			this.program.isSourceFileFromExternalLibrary(sourceFile) ||
-			this.program.isSourceFileDefaultLibrary(sourceFile)
+			origSymbol.declarations.some((d) => this.program.isSourceFileFromExternalLibrary(d.getSourceFile())) ||
+			origSymbol.declarations.some((d) => this.program.isSourceFileDefaultLibrary(d.getSourceFile()))
 		) {
 			return []
 		}
 
-		const getSubReferences = (identifier: ts.Identifier): Reference[] => {
-			let refSymbol = this.checker.getSymbolAtLocation(identifier)
-
-			// Avoid infinite loop.
-			if (!refSymbol || refSymbol === origSymbol) return []
-
-			if (refSymbol.flags & ts.SymbolFlags.Alias) {
-				refSymbol = this.checker.getAliasedSymbol(refSymbol)
-			}
-
-			if (!refSymbol.declarations || !refSymbol.declarations.length) return []
-
-			return this.getReferences(refSymbol)
-		}
+		// Keep parent symbols in an array to avoid infinite loop when looking for circular subreferences.
+		symbolsChain.push(origSymbol)
 
 		const refs: Reference[] = []
 
@@ -128,8 +113,23 @@ export class SymbolCollector {
 
 			if (ts.isSourceFile(declaration)) continue
 
-			// Taken from https://github.com/microsoft/rushstack/blob/2cb32ec198/apps/api-extractor/src/analyzer/AstSymbolTable.ts#L298
+			const getSubReferences = (identifier: ts.Identifier): Reference[] => {
+				let refSymbol = this.checker.getSymbolAtLocation(identifier)
+
+				// Avoid infinite loop due to circular references.
+				if (!refSymbol || symbolsChain.includes(refSymbol)) return []
+
+				if (refSymbol.flags & ts.SymbolFlags.Alias) {
+					refSymbol = this.checker.getAliasedSymbol(refSymbol)
+				}
+
+				if (!refSymbol.declarations || !refSymbol.declarations.length) return []
+
+				return this.getReferences(refSymbol, symbolsChain)
+			}
+
 			declaration.forEachChild(function visit(child) {
+				// Taken from https://github.com/microsoft/rushstack/blob/2cb32ec198/apps/api-extractor/src/analyzer/AstSymbolTable.ts#L298
 				if (
 					ts.isTypeReferenceNode(child) ||
 					ts.isExpressionWithTypeArguments(child) || // "extends"
@@ -137,12 +137,17 @@ export class SymbolCollector {
 					ts.isTypeQueryNode(child) // "typeof X"
 				) {
 					const identifier = findFirstChild(child, ts.isIdentifier)
+
 					if (identifier) {
-						refs.push({ ref: identifier, subrefs: getSubReferences(identifier), declarationIndex })
+						const subrefs = getSubReferences(identifier)
+
+						refs.push({ ref: identifier, subrefs, declarationIndex })
 					}
 				}
 
-				if (ts.isImportTypeNode(child)) refs.push({ ref: child, subrefs: [], declarationIndex })
+				if (ts.isImportTypeNode(child)) {
+					refs.push({ ref: child, subrefs: [], declarationIndex })
+				}
 
 				child.forEachChild(visit)
 			})

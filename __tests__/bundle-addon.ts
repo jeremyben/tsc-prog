@@ -88,6 +88,24 @@ test('ambient declaration', () => {
 	expect(bundled.match(/interface InternalInterface {$/gm)).toHaveLength(2)
 })
 
+test('circular reference bug', () => {
+	const entryPoint = fixture('circular-reference-bug', 'dist', 'main.d.ts')
+
+	build({
+		basePath: fixture('circular-reference-bug'),
+		extends: '../tsconfig.json',
+		compilerOptions,
+		clean: { outDir: true },
+		bundleDeclaration: {
+			entryPoint,
+		},
+	})
+
+	const bundled = readFileSync(entryPoint, 'utf8')
+
+	expect(bundled).toMatch(/^export declare class User<T extends User = any> {$/m)
+})
+
 test.skip('complex', () => {
 	const entryPoint = fixture('complex', 'dist', 'main.d.ts')
 
