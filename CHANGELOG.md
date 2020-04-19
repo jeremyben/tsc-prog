@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.1](https://github.com/jeremyben/tsc-prog/compare/v2.2.0...v2.2.1) (2020-04-19)
+
+
+### Bug Fixes
+
+* **bundle:** infinite loop due to circular reference ([3ca2cb8](https://github.com/jeremyben/tsc-prog/commit/3ca2cb8b1562362a7d02cfd61a2dafd7a836748a))
+
 ## [2.2.0](https://github.com/jeremyben/tsc-prog/compare/v2.1.1...v2.2.0) (2020-04-04)
 
 
