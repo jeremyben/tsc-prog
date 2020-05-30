@@ -73,8 +73,8 @@ export function createProgramFromConfig({
 		host,
 	})
 
-	// @ts-ignore https://github.com/Microsoft/TypeScript/issues/1863
-	program[excludeKey] = config.exclude
+	// https://github.com/Microsoft/TypeScript/issues/1863
+	;(program as any)[excludeKey] = config.exclude
 
 	return program
 }

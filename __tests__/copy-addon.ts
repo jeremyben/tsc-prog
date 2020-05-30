@@ -13,7 +13,7 @@ afterEach(() => {
 describe('Copy addon', () => {
 	test('all other files', () => {
 		const expectedOtherFiles = readdirSync(join(basePath, 'src', 'other'))
-		const consoleInfoSpy = spyOn(console, 'info')
+		const consoleWarnSpy = spyOn(console, 'warn')
 
 		build({
 			basePath,
@@ -28,7 +28,7 @@ describe('Copy addon', () => {
 		const excludedDirDistPath = join(basePath, 'dist', 'excluded')
 		expect(existsSync(excludedDirDistPath)).toBe(false)
 
-		expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringMatching(/override.*main\.js/))
+		expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringMatching(/already.*main\.js/))
 	})
 
 	test('do not recursively copy outDir to outDir', () => {

@@ -6,11 +6,10 @@ import { relativeToCWD } from './path'
  * Copy file, create parent folders if necessary.
  * @internal
  */
-export function cp(srcFilePath: string, destFilePath: string, force = true) {
-	const copyFlag = force ? 0 : fs.constants.COPYFILE_EXCL
+export function cp(srcFilePath: string, destFilePath: string, overwrite = false) {
 	const parentDir = dirname(destFilePath)
 	fs.mkdirSync(parentDir, { recursive: true }) // no EEXIST error issue with recursive option
-	fs.copyFileSync(srcFilePath, destFilePath, copyFlag)
+	fs.copyFileSync(srcFilePath, destFilePath, overwrite ? 0 : fs.constants.COPYFILE_EXCL)
 }
 
 /**
