@@ -11,11 +11,12 @@ export * from './module/functions-variables'
 export { isAsync as isDeferred } from './module/functions-variables'
 
 import * as classes from './module/classes'
-export type repo = classes.UserRepository['user']
-// export * from './module/classes'
-export type UserC = typeof import('./module/classes').default
 
+// export * from './module/classes'
 export { default } from './module/classes'
+
+export type repo = classes.UserRepository['user']
+export type UserC = typeof import('./module/classes').default
 
 import { Myspace, log, MyModule } from './module/namespaces'
 export { log as aliasedLog, Myspace as AliasedNamespace, MyModule as AliasedModule }
@@ -40,3 +41,7 @@ export { yo }
 // export default function aa(arg: string) {
 // 	return arg.toUpperCase()
 // }
+
+import { World } from './module/interfaces'
+
+export type Greeting = { world: `hello ${World}` }

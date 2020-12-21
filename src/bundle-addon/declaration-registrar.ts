@@ -192,7 +192,9 @@ export class DeclarationRegistrar {
 				if (!nextKeyword) throw Error("Can't find declaration keyword: " + text)
 
 				const keywordAndNewName = nextKeyword.getText(sourceFile) + ' ' + newName
+
 				// Move the end by one space to remove the empty space after the function name when inserting it.
+				// @ts-expect-error readonly end
 				if (nextKeyword.kind === ts.SyntaxKind.FunctionKeyword) nextKeyword.end++
 
 				replacements.push({ replace: nextKeyword, by: keywordAndNewName })

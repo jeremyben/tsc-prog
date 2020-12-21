@@ -58,3 +58,5 @@ export interface OtherInterface {
 	other: string
 	user: User
 }
+
+export type World = 'world'
