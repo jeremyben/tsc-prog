@@ -9,12 +9,20 @@ jest.mock('../src/utils/fs', () => ({
 	rmrf: jest.fn((path) => console.info('mock rmrf on', path)),
 }))
 
-// Need actual delete implementation to clean between some tests.
-// Can't unmock implicit imports on a per test basis https://github.com/facebook/jest/issues/2649
+const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+
 afterEach(() => {
+	consoleLogSpy.mockClear()
+
+	// Need actual delete implementation to clean between some tests.
+	// Can't unmock implicit imports on a per test basis https://github.com/facebook/jest/issues/2649
 	const { rmrf } = jest.requireActual('../src/utils/fs')
 	const outDirPaths = [join(basePath, 'dist'), join(basePath, 'src', 'dist')]
 	outDirPaths.forEach(rmrf)
+})
+
+afterAll(() => {
+	consoleLogSpy.mockRestore()
 })
 
 describe('Clean protections', () => {

@@ -5,13 +5,22 @@ import { rmrf } from '../src/utils/fs'
 
 const basePath = join(__dirname, '..', '__fixtures__', 'basic')
 
+const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
+
 afterEach(() => {
+	consoleLogSpy.mockClear()
+	consoleWarnSpy.mockClear()
+
 	rmrf(join(basePath, 'dist'))
 })
 
-test('Create program by overriding config file', async () => {
-	const consoleWarnSpy = spyOn(console, 'warn')
+afterAll(() => {
+	consoleWarnSpy.mockRestore()
+	consoleLogSpy.mockRestore()
+})
 
+test('Create program by overriding config file', async () => {
 	const program = createProgramFromConfig({
 		basePath,
 		configFilePath: 'tsconfig.json',
@@ -37,8 +46,6 @@ test('Create program by overriding config file', async () => {
 })
 
 test('Build without errors with config from scratch', async () => {
-	const consoleWarnSpy = spyOn(console, 'warn')
-
 	build({
 		basePath,
 		compilerOptions: {
@@ -56,6 +63,9 @@ test('Build without errors with config from scratch', async () => {
 			skipLibCheck: true,
 		},
 	})
+
+	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Files to compile')) // listFiles: true
+	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
 
 	expect(consoleWarnSpy).not.toHaveBeenCalledWith(expect.stringContaining('error'))
 

@@ -4,6 +4,16 @@ import { build, TsConfigCompilerOptions } from '../src'
 
 const fixture = (...path: string[]) => join(__dirname, '..', '__fixtures__', 'bundle', ...path)
 
+const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+
+afterEach(() => {
+	consoleLogSpy.mockClear()
+})
+
+afterAll(() => {
+	consoleLogSpy.mockRestore()
+})
+
 const compilerOptions: TsConfigCompilerOptions = { rootDir: '.', outDir: 'dist' }
 
 test('duplicate', () => {
@@ -30,6 +40,8 @@ test('duplicate', () => {
 	]) {
 		expect(bundled).toContain(expected)
 	}
+
+	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
 })
 
 test('global name conflict', () => {
@@ -57,6 +69,8 @@ test('global name conflict', () => {
 	]) {
 		expect(bundled).toMatch(expected)
 	}
+
+	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
 })
 
 test('ambient declaration', () => {
@@ -86,6 +100,8 @@ test('ambient declaration', () => {
 
 	expect(bundled.match(/namespace GlobalNamespace {$/gm)).toHaveLength(2)
 	expect(bundled.match(/interface InternalInterface {$/gm)).toHaveLength(2)
+
+	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
 })
 
 test('circular reference bug', () => {
@@ -102,11 +118,34 @@ test('circular reference bug', () => {
 	})
 
 	const bundled = readFileSync(entryPoint, 'utf8')
-
 	expect(bundled).toMatch(/^export declare class User<T extends User = any> {$/m)
+
+	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
+})
+
+test('namespace merge', () => {
+	const entryPoint = fixture('namespace-merge', 'dist', 'main.d.ts')
+
+	build({
+		basePath: fixture('namespace-merge'),
+		extends: '../tsconfig.json',
+		compilerOptions,
+		clean: { outDir: true },
+		bundleDeclaration: {
+			entryPoint,
+		},
+	})
+
+	const bundled = readFileSync(entryPoint, 'utf8')
+
+	expect(bundled).toMatch(/^declare type StatusCode = StatusCode\./m)
+	expect(bundled).toMatch(/^declare namespace StatusCode {$/m)
+
+	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
 })
 
 test.skip('complex', () => {
+	const log = jest.requireActual('console').log
 	const entryPoint = fixture('complex', 'dist', 'main.d.ts')
 
 	build({
@@ -119,5 +158,7 @@ test.skip('complex', () => {
 	})
 
 	const bundled = readFileSync(entryPoint, 'utf8')
-	console.log(bundled)
+	log(bundled)
+
+	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
 })
