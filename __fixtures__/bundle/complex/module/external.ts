@@ -20,6 +20,6 @@ export { StringDecoder }
 import { OutgoingHttpHeaders } from 'http'
 export type OutgoingHeaders = OutgoingHttpHeaders
 
-export type Digest = typeof import('ts-jest').digest
+export type TestScheduler = typeof import('jest').TestScheduler
 
 export { randomBytesB } from './namespaces'
