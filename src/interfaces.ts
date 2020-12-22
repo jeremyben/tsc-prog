@@ -96,12 +96,13 @@ export interface EmitOptions {
 
 /**
  * Mimicks part of `tsconfig.json` file.
- * Options like `compileOnSave` and `typeAcquisition` are not implemented,
+ *
+ * Options like `compileOnSave`, `typeAcquisition`, `watch` are not implemented,
  * since this is for a basic build pipeline.
  *
  * Retrieved with the help of:
- * https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json
- * https://app.quicktype.io?share=EJs8p76127qNWGILyTBD
+ * - https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json
+ * - https://app.quicktype.io?share=K02ozbca8ED63VSPHjP1
  *
  * @public
  */
@@ -155,24 +156,24 @@ export interface TsConfig {
  */
 export interface TsConfigCompilerOptions {
 	/**
-	 * Allow javascript files to be compiled.
+	 * Allow javascript files to be compiled. Requires TypeScript version 1.8 or later.
 	 */
 	allowJs?: boolean
 	/**
 	 * Allow default imports from modules with no default export. This does not affect code
-	 * emit, just typechecking.
+	 * emit, just typechecking. Requires TypeScript version 1.8 or later.
 	 */
 	allowSyntheticDefaultImports?: boolean
 	/**
-	 * Allow accessing UMD globals from modules.
+	 * Allow accessing UMD globals from modules. Requires TypeScript version 3.5 or later.
 	 */
 	allowUmdGlobalAccess?: boolean
 	/**
-	 * Do not report errors on unreachable code.
+	 * Do not report errors on unreachable code. Requires TypeScript version 1.8 or later.
 	 */
 	allowUnreachableCode?: boolean
 	/**
-	 * Do not report errors on unused labels.
+	 * Do not report errors on unused labels. Requires TypeScript version 1.8 or later.
 	 */
 	allowUnusedLabels?: boolean
 	/**
@@ -181,11 +182,16 @@ export interface TsConfigCompilerOptions {
 	 */
 	alwaysStrict?: boolean
 	/**
+	 * Have recompiles in '--incremental' and '--watch' assume that changes within a file will
+	 * only affect files directly depending on it. Requires TypeScript version 3.8 or later.
+	 */
+	// assumeChangesOnlyAffectDirectDependencies?: boolean;
+	/**
 	 * Base directory to resolve non-relative module names.
 	 */
 	baseUrl?: string
 	/**
-	 * The character set of the input files.
+	 * The character set of the input files. This setting is deprecated.
 	 */
 	charset?: string
 	/**
@@ -193,7 +199,7 @@ export interface TsConfigCompilerOptions {
 	 */
 	checkJs?: boolean
 	/**
-	 * Enables building for project references.
+	 * Enables building for project references. Requires TypeScript version 3.0 or later.
 	 */
 	composite?: boolean
 	/**
@@ -211,13 +217,22 @@ export interface TsConfigCompilerOptions {
 	 */
 	declarationMap?: boolean
 	/**
-	 * Show diagnostic information.
+	 * Show diagnostic information. This setting is deprecated. See `extendedDiagnostics.`
 	 */
 	diagnostics?: boolean
+	/**
+	 * Recommend IDE's to load referenced composite projects dynamically instead of loading them
+	 * all immediately. Requires TypeScript version 4.0 or later.
+	 */
+	disableReferencedProjectLoad?: boolean
 	/**
 	 * Disable size limit for JavaScript project. Requires TypeScript version 2.0 or later.
 	 */
 	disableSizeLimit?: boolean
+	/**
+	 * Disable solution searching for this project. Requires TypeScript version 3.8 or later.
+	 */
+	disableSolutionSearching?: boolean
 	/**
 	 * Provide full support for iterables in 'for-of', spread, and destructuring when targeting
 	 * 'ES5' or 'ES3'. Requires TypeScript version 2.3 or later.
@@ -228,7 +243,7 @@ export interface TsConfigCompilerOptions {
 	 */
 	emitBOM?: boolean
 	/**
-	 * Only emit '.d.ts' declaration files.
+	 * Only emit '.d.ts' declaration files. Requires TypeScript version 2.8 or later.
 	 */
 	emitDeclarationOnly?: boolean
 	/**
@@ -246,25 +261,48 @@ export interface TsConfigCompilerOptions {
 	 */
 	experimentalDecorators?: boolean
 	/**
-	 * Disallow inconsistently-cased references to the same file.
+	 * Show verbose diagnostic information.
+	 */
+	extendedDiagnostics?: boolean
+	/**
+	 * Specify the polling strategy to use when the system runs out of or doesn't support native
+	 * file watchers. Requires TypeScript version 3.8 or later.
+	 */
+	// fallbackPolling?: 'dynamicPriorityPolling' | 'fixedPollingInterval' | 'priorityPollingInterval'
+	/**
+	 * Disallow inconsistently-cased references to the same file. Enabling this setting is
+	 * recommended.
 	 */
 	forceConsistentCasingInFileNames?: boolean
+	/**
+	 * Emit a v8 CPI profile during the compiler run, which may provide insight into slow
+	 * builds. Requires TypeScript version 3.7 or later.
+	 */
+	// generateCpuProfile?: string
 	/**
 	 * Import emit helpers (e.g. '__extends', '__rest', etc..) from tslib. Requires TypeScript
 	 * version 2.1 or later.
 	 */
 	importHelpers?: boolean
 	/**
-	 * Enable incremental compilation.
+	 * This flag controls how imports work. When set to `remove`, imports that only reference
+	 * types are dropped. When set to `preserve`, imports are never dropped. When set to
+	 * `error`, imports that can be replaced with `import type` will result in a compiler error.
+	 * Requires TypeScript version 3.8 or later.
+	 */
+	importsNotUsedAsValues?: 'error' | 'preserve' | 'remove'
+	/**
+	 * Enable incremental compilation. Requires TypeScript version 3.4 or later.
 	 */
 	incremental?: boolean
 	/**
-	 * Emit a single file with source maps instead of having a separate file.
+	 * Emit a single file with source maps instead of having a separate file. Requires
+	 * TypeScript version 1.5 or later.
 	 */
 	inlineSourceMap?: boolean
 	/**
 	 * Emit the source alongside the sourcemaps within a single file; requires --inlineSourceMap
-	 * to be set.
+	 * to be set. Requires TypeScript version 1.5 or later.
 	 */
 	inlineSources?: boolean
 	/**
@@ -272,7 +310,8 @@ export interface TsConfigCompilerOptions {
 	 */
 	isolatedModules?: boolean
 	/**
-	 * Specify JSX code generation: 'preserve', 'react', or 'react-native'.
+	 * Specify JSX code generation: 'preserve', 'react', 'react-jsx', 'react-jsxdev'
+	 * or'react-native'. Requires TypeScript version 2.2 or later.
 	 */
 	jsx?: 'preserve' | 'react' | 'react-native'
 	/**
@@ -281,8 +320,19 @@ export interface TsConfigCompilerOptions {
 	 */
 	jsxFactory?: string
 	/**
-	 * Resolve 'keyof' to string valued property names only (no numbers or symbols). Requires
-	 * TypeScript version 2.9 or later.
+	 * Specify the JSX Fragment reference to use for fragements when targeting react JSX emit,
+	 * e.g. 'React.Fragment' or 'Fragment'. Requires TypeScript version 4.0 or later.
+	 */
+	jsxFragmentFactory?: string
+	/**
+	 * Declare the module specifier to be used for importing the `jsx` and `jsxs` factory
+	 * functions when using jsx as "react-jsx" or "react-jsxdev". Requires TypeScript version
+	 * 4.1 or later.
+	 */
+	jsxImportSource?: string
+	/**
+	 * Resolve 'keyof' to string valued property names only (no numbers or symbols). This
+	 * setting is deprecated. Requires TypeScript version 2.9 or later.
 	 */
 	keyofStringsOnly?: boolean
 	/**
@@ -334,7 +384,6 @@ export interface TsConfigCompilerOptions {
 		| 'esnext.symbol'
 		| 'scripthost'
 		| 'webworker'
-		| 'webworker.importscripts'
 	>
 	/**
 	 * Enable to list all emitted files. Requires TypeScript version 2.0 or later.
@@ -344,6 +393,10 @@ export interface TsConfigCompilerOptions {
 	 * Print names of files part of the compilation.
 	 */
 	listFiles?: boolean
+	/**
+	 * Print names of files that are part of the compilation and then stop processing.
+	 */
+	// listFilesOnly?: boolean
 	/**
 	 * Specifies the location where debugger should locate map files instead of generated
 	 * locations
@@ -356,15 +409,16 @@ export interface TsConfigCompilerOptions {
 	maxNodeModuleJsDepth?: number
 	/**
 	 * Specify module code generation.
+	 * Only 'AMD' and 'System' can be used in conjunction with --outFile.
 	 */
-	module?: 'none' | 'commonjs' | 'amd' | 'system' | 'umd' | 'es2015' | 'esnext'
+	module?: 'none' | 'commonjs' | 'amd' | 'system' | 'umd' | 'es6' | 'es2015' | 'es2020' | 'esnext'
 	/**
 	 * Specifies module resolution strategy: 'node' (Node) or 'classic' (TypeScript pre 1.6) .
 	 */
 	moduleResolution?: 'node' | 'classic'
 	/**
-	 * Specifies the end of line sequence to be used when emitting files: 'CRLF' (dos) or 'LF'
-	 * (unix).
+	 * Specifies the end of line sequence to be used when emitting files: 'CRLF' (Windows) or
+	 * 'LF' (Unix). Requires TypeScript version 1.5 or later.
 	 */
 	newLine?: 'CRLF' | 'LF'
 	/**
@@ -372,31 +426,37 @@ export interface TsConfigCompilerOptions {
 	 */
 	noEmit?: boolean
 	/**
-	 * Do not generate custom helper functions like __extends in compiled output.
+	 * Do not generate custom helper functions like __extends in compiled output. Requires
+	 * TypeScript version 1.5 or later.
 	 */
 	noEmitHelpers?: boolean
 	/**
-	 * Do not emit outputs if any type checking errors were reported.
+	 * Do not emit outputs if any type checking errors were reported. Requires TypeScript
+	 * version 1.4 or later.
 	 */
 	noEmitOnError?: boolean
 	/**
-	 * Do not truncate error messages.
+	 * Do not truncate error messages. This setting is deprecated.
 	 */
 	noErrorTruncation?: boolean
 	/**
-	 * Report errors for fallthrough cases in switch statement.
+	 * Report errors for fallthrough cases in switch statement. Requires TypeScript version 1.8
+	 * or later.
 	 */
 	noFallthroughCasesInSwitch?: boolean
 	/**
-	 * Warn on expressions and declarations with an implied 'any' type.
+	 * Warn on expressions and declarations with an implied 'any' type. Enabling this setting is
+	 * recommended.
 	 */
 	noImplicitAny?: boolean
 	/**
-	 * Report error when not all code paths in function return a value.
+	 * Report error when not all code paths in function return a value. Requires TypeScript
+	 * version 1.8 or later.
 	 */
 	noImplicitReturns?: boolean
 	/**
-	 * Raise error on 'this' expressions with an implied any type.
+	 * Raise error on 'this' expressions with an implied any type. Enabling this setting is
+	 * recommended. Requires TypeScript version 2.0 or later.
 	 */
 	noImplicitThis?: boolean
 	/**
@@ -412,9 +472,15 @@ export interface TsConfigCompilerOptions {
 	 */
 	noResolve?: boolean
 	/**
-	 * Disable strict checking of generic signatures in function types.
+	 * Disable strict checking of generic signatures in function types. Requires TypeScript
+	 * version 2.4 or later.
 	 */
 	noStrictGenericChecks?: boolean
+	/**
+	 * Add `undefined` to an un-declared field in a type. Requires TypeScript version 4.1 or
+	 * later.
+	 */
+	noUncheckedIndexedAccess?: boolean
 	/**
 	 * Report errors on unused locals. Requires TypeScript version 2.0 or later.
 	 */
@@ -454,14 +520,13 @@ export interface TsConfigCompilerOptions {
 	/**
 	 * Keep outdated console output in watch mode instead of clearing the screen.
 	 */
-	preserveWatchOutput?: boolean
+	// preserveWatchOutput?: boolean
 	/**
 	 * Stylize errors and messages using color and context (experimental).
 	 */
 	pretty?: boolean
 	/**
-	 * Specifies the object invoked for createElement and __spread when targeting 'react' JSX
-	 * emit.
+	 * Specifies the object invoked for createElement and __spread when targeting 'react' JSX emit.
 	 */
 	reactNamespace?: string
 	/**
@@ -478,14 +543,19 @@ export interface TsConfigCompilerOptions {
 	 */
 	rootDir?: string
 	/**
-	 * Specify list of root directories to be used when resolving modules.
+	 * Specify list of root directories to be used when resolving modules. Requires TypeScript
+	 * version 2.0 or later.
 	 */
 	rootDirs?: string[]
 	/**
-	 * Skip type checking of declaration files. Requires TypeScript version 2.0 or later.
+	 * Use `skipLibCheck` instead. Skip type checking of default library declaration files.
+	 */
+	skipDefaultLibCheck?: boolean
+	/**
+	 * Skip type checking of declaration files. Enabling this setting is recommended. Requires
+	 * TypeScript version 2.0 or later.
 	 */
 	skipLibCheck?: boolean
-	skipDefaultLibCheck?: boolean
 	/**
 	 * Generates corresponding '.map' file.
 	 */
@@ -496,25 +566,28 @@ export interface TsConfigCompilerOptions {
 	 */
 	sourceRoot?: string
 	/**
-	 * Enable all strict type checking options. Requires TypeScript version 2.3 or later.
+	 * Enable all strict type checking options. Enabling this setting is recommended. Requires
+	 * TypeScript version 2.3 or later.
 	 */
 	strict?: boolean
 	/**
 	 * Enable stricter checking of of the `bind`, `call`, and `apply` methods on functions.
+	 * Enabling this setting is recommended. Requires TypeScript version 3.2 or later.
 	 */
 	strictBindCallApply?: boolean
 	/**
-	 * Disable bivariant parameter checking for function types. Requires TypeScript version 2.6
-	 * or later.
+	 * Disable bivariant parameter checking for function types. Enabling this setting is
+	 * recommended. Requires TypeScript version 2.6 or later.
 	 */
 	strictFunctionTypes?: boolean
 	/**
-	 * Enable strict null checks. Requires TypeScript version 2.0 or later.
+	 * Enable strict null checks. Enabling this setting is recommended. Requires TypeScript
+	 * version 2.0 or later.
 	 */
 	strictNullChecks?: boolean
 	/**
-	 * Ensure non-undefined class properties are initialized in the constructor. Requires
-	 * TypeScript version 2.7 or later.
+	 * Ensure non-undefined class properties are initialized in the constructor. Enabling this
+	 * setting is recommended. Requires TypeScript version 2.7 or later.
 	 */
 	strictPropertyInitialization?: boolean
 	/**
@@ -522,24 +595,26 @@ export interface TsConfigCompilerOptions {
 	 */
 	stripInternal?: boolean
 	/**
-	 * Suppress excess property checks for object literals.
+	 * Suppress excess property checks for object literals. It is recommended to use @ts-ignore
+	 * comments instead of enabling this setting.
 	 */
 	suppressExcessPropertyErrors?: boolean
 	/**
-	 * Suppress noImplicitAny errors for indexing objects lacking index signatures.
+	 * Suppress noImplicitAny errors for indexing objects lacking index signatures. It is
+	 * recommended to use @ts-ignore comments instead of enabling this setting.
 	 */
 	suppressImplicitAnyIndexErrors?: boolean
 	/**
-	 * Specify ECMAScript target version. Permitted values are 'es3', 'es5', 'es6', 'es2015',
-	 * 'es2016', 'es2017', 'es2018', 'es2019', 'es2020' or 'esnext'.
+	 * Specify ECMAScript target version.
 	 */
 	target?: 'es3' | 'es5' | 'es6' | 'es2015' | 'es2016' | 'es2017' | 'es2018' | 'es2019' | 'es2020' | 'esnext'
 	/**
-	 * Enable tracing of the name resolution process.
+	 * Enable tracing of the name resolution process. Requires TypeScript version 2.0 or later.
 	 */
 	traceResolution?: boolean
 	/**
-	 * Specify file to store incremental compilation information.
+	 * Specify file to store incremental compilation information. Requires TypeScript version
+	 * 3.4 or later.
 	 */
 	tsBuildInfoFile?: string
 	/**
@@ -553,7 +628,26 @@ export interface TsConfigCompilerOptions {
 	 */
 	types?: string[]
 	/**
+	 * Emit ECMAScript standard class fields. Requires TypeScript version 3.7 or later.
+	 */
+	useDefineForClassFields?: boolean
+	/**
 	 * Watch input files.
 	 */
 	// watch?: boolean
+	/**
+	 * Specify the strategy for watching directories under systems that lack recursive
+	 * file-watching functionality. Requires TypeScript version 3.8 or later.
+	 */
+	// watchDirectory?: 'dynamicPriorityPolling' | 'fixedPollingInterval' | 'useFsEvents'
+	/**
+	 * Specify the strategy for watching individual files. Requires TypeScript version 3.8 or
+	 * later.
+	 */
+	// watchFile?:
+	// 	| 'dynamicPriorityPolling'
+	// 	| 'fixedPollingInterval'
+	// 	| 'priorityPollingInterval'
+	// 	| 'useFsEvents'
+	// 	| 'useFsEventsOnParentDirectory'
 }

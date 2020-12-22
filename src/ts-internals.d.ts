@@ -81,12 +81,6 @@ declare module 'typescript' {
 	function isJsonSourceFile(file: SourceFile): file is JsonSourceFile
 
 	/**
-	 * @see https://github.com/Microsoft/TypeScript/blob/v3.6.4/src/compiler/utilities.ts#L2822
-	 * @internal
-	 */
-	type PropertyNameLiteral = Identifier | StringLiteralLike | NumericLiteral
-
-	/**
 	 * @see https://github.com/Microsoft/TypeScript/blob/v3.6.4/src/compiler/utilities.ts#L2834-L2836
 	 * @internal
 	 */
