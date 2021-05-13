@@ -10,9 +10,9 @@ import { bundleDts, getDtsInterceptor } from './bundle-addon'
  * Compiles .ts files by creating a compilation object with the compiler API and emitting .js files.
  * @public
  */
-export function build(options: BuildOptions) {
+export function build(options: BuildOptions): ts.Diagnostic[] {
 	const program = createProgramFromConfig(options)
-	emit(program, options)
+	return emit(program, options)
 }
 
 /**
@@ -73,8 +73,8 @@ export function createProgramFromConfig({
 		host,
 	})
 
-	// https://github.com/Microsoft/TypeScript/issues/1863
-	;(program as any)[excludeKey] = config.exclude
+		// https://github.com/Microsoft/TypeScript/issues/1863
+		; (program as any)[excludeKey] = config.exclude
 
 	return program
 }
@@ -83,7 +83,7 @@ export function createProgramFromConfig({
  * Compiles TypeScript files and emits diagnostics if any.
  * @public
  */
-export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, bundleDeclaration }: EmitOptions = {}) {
+export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, bundleDeclaration }: EmitOptions = {}): ts.Diagnostic[] {
 	const options = program.getCompilerOptions()
 
 	if (copyOtherToOutDir && !options.outDir) {
@@ -160,4 +160,5 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, 
 	} else {
 		console.log(Color.green('Compilation successful'))
 	}
+	return allDiagnostics
 }
