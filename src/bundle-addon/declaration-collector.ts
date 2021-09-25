@@ -584,7 +584,7 @@ export class DeclarationCollector {
 	}
 
 	private debug(subject: 'export' | 'ref' | 'internal-global', ...messages: any[]) {
-		if (this.debugSwitch) console.log(`[${subject.toUpperCase()}]`, ...messages)
+		if (this.debugSwitch) console.info(`[${subject.toUpperCase()}]`, ...messages)
 	}
 
 	//

@@ -18,12 +18,49 @@ export type Reference = {
  * @internal
  */
 export class SymbolCollector {
+	/**
+	 * Star exported name from external libraries.
+	 * @example export * from '@org/package'
+	 */
 	externalStarModuleNames: Set<string>
+
+	/**
+	 * Exported/Exposed symbols at the root,
+	 * with their associated aliased original symbol (may be in different file than the root),
+	 * and all the other symbols referenced and needed by them.
+	 *
+	 * @example
+	 * export { myFunction } from './my-function' // aliased
+	 * export const myVariable = {} // not aliased
+	 */
 	exportSymbols: Map<ts.Symbol, [ts.Symbol, Reference[]]>
+
+	/**
+	 * Index of exported symbol names at the root.
+	 */
 	exportNames: Set<ts.__String>
+
+	/**
+	 * Index of original symbols associated with the exported symbols.
+	 */
 	origSymbols: Set<ts.Symbol>
+
+	/**
+	 * All globals declared (external and internal).
+	 * @example Array, Partial, etc.
+	 */
 	globalSymbols: ts.Symbol[]
+
+	/**
+	 * Index of declared global symbol names.
+	 */
 	globalNames: ts.__String[]
+
+	/**
+	 * Globals declared internally, either in a `declare global` statement inside a module file,
+	 * or directly with a `declare` statement inside an ambient file (file without import/export).
+	 * @example declare const myGlobalVariable = {}
+	 */
 	internalGlobalSymbols: ts.Symbol[]
 
 	private program: ts.Program
@@ -62,6 +99,7 @@ export class SymbolCollector {
 
 	/**
 	 * Retrieves exported symbols.
+	 * {@linkcode SymbolCollector.exportSymbols }
 	 */
 	private getExportSymbolsMap(moduleExports: ts.Symbol[]) {
 		// Map export symbol to its original one (might be the same), both ways, for indexing and easier retrieving.
@@ -259,8 +297,7 @@ export class SymbolCollector {
 	}
 
 	/**
-	 * Retrieves globals declared internally, either in a `declare global` statement inside a module file,
-	 * or directly with a `declare` statement inside an ambient file (file without import/export).
+	 * {@linkcode SymbolCollector.internalGlobalSymbols}
 	 */
 	private getInternalGlobalSymbols(globalSymbols: ts.Symbol[]): ts.Symbol[] {
 		return globalSymbols.filter((symbol) => {
@@ -283,6 +320,7 @@ export class SymbolCollector {
 	/**
 	 * Recursively retrieves symbols star exported from external libraries
 	 * so we don't manipulate them later and simply expose them as `export * from "lib"`.
+	 * {@linkcode SymbolCollector.externalStarModuleNames}
 	 */
 	private getExternalStarExports() {
 		const externalStarExports = new Set<ts.Symbol>()
