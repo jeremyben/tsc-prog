@@ -38,8 +38,8 @@ export class DeclarationCollector {
 	private checker: ts.TypeChecker
 	private entryFile: ts.SourceFile
 
-	private globalsOption: boolean
-	private augmentationsOption: boolean
+	private declareGlobalsOption: boolean
+	private declareAugmentationsOption: boolean
 
 	private debugSwitch = false
 
@@ -47,15 +47,15 @@ export class DeclarationCollector {
 		symbols: SymbolCollector,
 		entryFile: ts.SourceFile,
 		program: ts.Program,
-		globalsOption = true,
-		augmentationsOption = true
+		declareGlobalsOption = true,
+		declareAugmentationsOption = true
 	) {
 		this.program = program
 		this.checker = program.getTypeChecker()
 		this.entryFile = entryFile
 		this.symbols = symbols
-		this.globalsOption = globalsOption
-		this.augmentationsOption = augmentationsOption
+		this.declareGlobalsOption = declareGlobalsOption
+		this.declareAugmentationsOption = declareAugmentationsOption
 		this.refsDeclared = new Map<ts.__String, ts.Symbol[]>()
 		this.declarations = new DeclarationRegistrar()
 		this.exportRenames = this.getExportRenames(this.symbols.exportSymbols)
@@ -68,7 +68,7 @@ export class DeclarationCollector {
 			this.collectExports(exportSymbol)
 		}
 
-		if (this.globalsOption) {
+		if (this.declareGlobalsOption) {
 			for (const internalGlobalSymbol of this.symbols.internalGlobalSymbols) {
 				this.debug('internal-global', internalGlobalSymbol.name)
 				this.declarations.registerGlobal(internalGlobalSymbol)
@@ -281,22 +281,27 @@ export class DeclarationCollector {
 				continue
 			}
 
-			// Ignore symbols without declarations.
-			if (!origRefSymbol.declarations || !origRefSymbol.declarations.length) {
-				console.warn(Color.yellow(`Referenced symbol ${origRefSymbol.name} does not have any declaration`))
-				continue
-			}
-
 			//
 			// ═════════ Global ═════════
 			//
 
 			if (
-				this.symbols.globalSymbols.includes(origRefSymbol) &&
+				this.isGlobalSymbol(origRefSymbol) &&
 				// Redeclare internal global references if the global option is off.
-				(this.globalsOption || (!this.globalsOption && !this.symbols.internalGlobalSymbols.includes(origRefSymbol)))
+				(this.declareGlobalsOption || (!this.declareGlobalsOption && !this.isInternalGlobalSymbol(origRefSymbol)))
 			) {
 				this.debug('ref', 'is-global:', refName)
+				continue
+			}
+
+			//
+			// ═════════ Without declarations ═════════
+			//
+
+			// Ignore symbols without declarations.
+			// After globals, because some global symbols like `globalThis` does not have a declaration.
+			if (!origRefSymbol.declarations || !origRefSymbol.declarations.length) {
+				console.warn(Color.yellow(`Referenced symbol ${origRefSymbol.name} does not have any declaration`))
 				continue
 			}
 
@@ -566,8 +571,16 @@ export class DeclarationCollector {
 	}
 
 	private shouldHandleExternalAugmentation(declaration: ts.Declaration): boolean {
-		if (!this.augmentationsOption) return false
+		if (!this.declareAugmentationsOption) return false
 		return !!findFirstParent(declaration, isExternalLibraryAugmentation)
+	}
+
+	private isGlobalSymbol(symbol: ts.Symbol): boolean {
+		return this.symbols.globalSymbols.includes(symbol)
+	}
+
+	private isInternalGlobalSymbol(symbol: ts.Symbol): boolean {
+		return this.symbols.internalGlobalSymbols.includes(symbol)
 	}
 
 	private debug(subject: 'export' | 'ref' | 'internal-global', ...messages: any[]) {
