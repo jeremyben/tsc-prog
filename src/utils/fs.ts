@@ -49,7 +49,7 @@ export function readdirPaths(dir: string) {
  */
 function tryIsDirectory(path: string): boolean {
 	const stats = fsSyncRetry(fs.lstatSync, path, ['EPERM'], 2)
-	return stats.isDirectory()
+	return stats!.isDirectory()
 }
 
 /**
@@ -86,7 +86,7 @@ function fsSyncRetry<T extends (path: string) => any>(
 
 		try {
 			return fsSyncFn(path)
-		} catch (err) {
+		} catch (err: any) {
 			if (!errorCodes.includes(err.code) || round > tries) throw err
 
 			fixWindowsEPERM(path)

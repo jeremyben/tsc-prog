@@ -28,7 +28,7 @@ export default function copyOtherFiles(program: ts.Program) {
 
 		try {
 			cp(srcOtherFile, destOtherFile)
-		} catch (error) {
+		} catch (error: any) {
 			if (error.code === 'EEXIST') console.warn(Color.yellow(error.message))
 			else throw error
 		}

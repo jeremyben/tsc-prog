@@ -107,7 +107,7 @@ export class DeclarationCollector {
 	private collectExports([exportSymbol, [origSymbol, references]]: MapEntry<SymbolCollector['exportSymbols']>): void {
 		// We look in the first declaration to retrieve common source file,
 		// since merged and overloaded declarations are in the same source file.
-		const sourceFile = origSymbol.declarations[0].getSourceFile()
+		const sourceFile = origSymbol.declarations![0].getSourceFile()
 
 		const exportName = exportSymbol.escapedName
 		const origName = origSymbol.escapedName
@@ -139,7 +139,7 @@ export class DeclarationCollector {
 		}
 
 		// External module augmentations are not detected as external, and would be duplicated.
-		if (this.shouldHandleExternalAugmentation(origSymbol.declarations[0])) {
+		if (this.shouldHandleExternalAugmentation(origSymbol.declarations![0])) {
 			this.debug('export', 'is-augmentation-of-external-lib:', exportName)
 			this.handleSymbolFromExternalLibrary(exportSymbol, true)
 			return
@@ -169,7 +169,7 @@ export class DeclarationCollector {
 			// If the value was exported as is, an intermediary variable named '_default' was created by the compiler.
 			// todo: default namespace and type
 			if (origSymbol.flags & ts.SymbolFlags.Variable) {
-				const exportRealName = getDeclarationName(exportSymbol.declarations[0])
+				const exportRealName = getDeclarationName(exportSymbol.declarations![0])
 
 				this.debug('export', 'default-variable-to-declare:', exportRealName || origName)
 				this.declarations.registerInternal(origSymbol, {
@@ -386,7 +386,7 @@ export class DeclarationCollector {
 				// Retrieve the right name in case of default export.
 				const refPropOrigName =
 					refPropOrigSymbol.escapedName === ts.InternalSymbolName.Default
-						? getDeclarationName(refPropOrigSymbol.declarations[0])
+						? getDeclarationName(refPropOrigSymbol.declarations![0])
 						: refPropOrigSymbol.escapedName
 
 				if (!refPropOrigName || refPropOrigName === ts.InternalSymbolName.Default) {
@@ -592,11 +592,11 @@ export class DeclarationCollector {
 		let aliasName: ts.__String | undefined = aliasSymbol.escapedName
 
 		if (aliasName === ts.InternalSymbolName.Default) {
-			aliasName = getDeclarationName(aliasSymbol.declarations[0])
+			aliasName = getDeclarationName(aliasSymbol.declarations![0])
 		}
 
 		if (aliasName === ts.InternalSymbolName.Default) {
-			aliasName = getDeclarationName(origAliasSymbol.declarations[0])
+			aliasName = getDeclarationName(origAliasSymbol.declarations![0])
 		}
 
 		if (!aliasName || aliasName === ts.InternalSymbolName.Default) {
@@ -625,7 +625,7 @@ export class DeclarationCollector {
 		importKind: ts.SyntaxKind
 		moduleName: string
 	} {
-		const [firstDeclaration] = symbol.declarations
+		const [firstDeclaration] = symbol.declarations!
 
 		const moduleSpecifier = getModuleSpecifier(firstDeclaration)
 

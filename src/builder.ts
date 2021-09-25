@@ -129,7 +129,9 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, 
 	let { diagnostics, emitSkipped, emittedFiles } = program.emit(undefined, dtsInterceptor)
 
 	if (options.listEmittedFiles && emittedFiles) {
-		if (bundleDeclaration) emittedFiles = emittedFiles.filter((path) => !dtsCache.has(path))
+		if (bundleDeclaration) {
+			emittedFiles = emittedFiles.filter((path) => !dtsCache.has(path))
+		}
 		console.log('Emitted files:\n' + emittedFiles.join('\n'))
 	}
 

@@ -38,6 +38,8 @@ export class DeclarationRegistrar {
 			symbolReplacements?: Replacement[][]
 		}
 	) {
+		if (!origSymbol.declarations) return
+
 		const isNamespace = origSymbol.declarations.some(ts.isSourceFile)
 		if (isNamespace) {
 			throw Error(`File ${origSymbol.escapedName} is imported as a namespace, and thus can't be bundled.`)
@@ -85,7 +87,7 @@ export class DeclarationRegistrar {
 	): void {
 		const name = symbol.escapedName
 
-		if (symbol.declarations.length > 1) {
+		if (symbol.declarations && symbol.declarations.length > 1) {
 			console.warn(Color.yellow(`External/Json symbol with multiple/merged declarations not supported: ${name}`))
 		}
 
@@ -132,7 +134,7 @@ export class DeclarationRegistrar {
 	}
 
 	registerGlobal(origSymbol: ts.Symbol) {
-		for (const declaration of origSymbol.declarations) {
+		for (const declaration of origSymbol.declarations || []) {
 			const sourceFile = declaration.getSourceFile()
 
 			let declarationText = declaration.getText(sourceFile)

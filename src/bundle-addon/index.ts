@@ -9,24 +9,23 @@ import { print } from './printer'
 import { ensureAbsolutePath } from '../utils/path'
 
 /**
+ * Intercepts the declaration file to a cache instead of writing it.
  * @internal
  */
-export function getDtsInterceptor(dtsCache: Map<string, string>) {
+export function getDtsInterceptor(dtsCache: Map<string, string>): ts.WriteFileCallback {
 	// https://github.com/microsoft/TypeScript/blob/v3.6.4/src/compiler/program.ts#L151-L171
 
-	const writeFile: ts.WriteFileCallback = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
+	return (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
 		try {
 			if (fileName.endsWith(ts.Extension.Dts) || fileName.endsWith('.d.ts.map')) {
 				dtsCache.set(fileName, data)
 			} else {
 				ts.sys.writeFile(fileName, data, writeByteOrderMark)
 			}
-		} catch (err) {
+		} catch (err: any) {
 			if (onError) onError(err.message)
 		}
 	}
-
-	return writeFile
 }
 
 /**
@@ -87,7 +86,7 @@ export function bundleDts(
 		if (dtsOptions.listEmittedFiles) {
 			console.log('Emitted files:\n' + entryPoints.join('\n'))
 		}
-	} catch (error) {
+	} catch (error: any) {
 		if (!fallbackOnError) throw Color.red(error)
 
 		console.error(Color.red(error.stack))

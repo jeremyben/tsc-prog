@@ -93,6 +93,8 @@ export class SymbolCollector {
 	 * Retrieves unexported symbols used by exported symbols.
 	 */
 	private getReferences(origSymbol: ts.Symbol, symbolsChain: ts.Symbol[] = []): Reference[] {
+		if (!origSymbol.declarations) return []
+
 		// Don't search in external symbol declarations.
 		// We need to check every declaration because of augmentations that could lead to false negatives.
 		if (
@@ -204,7 +206,7 @@ export class SymbolCollector {
 
 			moduleSymbol.exports.forEach((symbol, name) => {
 				if (name === ts.InternalSymbolName.ExportStar) return
-				const pos = symbol.declarations[0].getStart(entryFile)
+				const pos = symbol.declarations![0].getStart(entryFile)
 				entryFilePositions.set(symbol, pos)
 			})
 		}
@@ -215,7 +217,7 @@ export class SymbolCollector {
 			const starExportSymbol = moduleSymbol.exports.get(ts.InternalSymbolName.ExportStar)
 			if (!starExportSymbol) return
 
-			for (const exportDeclaration of starExportSymbol.declarations) {
+			for (const exportDeclaration of starExportSymbol.declarations || []) {
 				if (!ts.isExportDeclaration(exportDeclaration)) continue
 
 				const resolved = this.getResolvedModule(exportDeclaration)
@@ -292,7 +294,7 @@ export class SymbolCollector {
 			const starExportSymbol = moduleSymbol.exports.get(ts.InternalSymbolName.ExportStar)
 			if (!starExportSymbol) return
 
-			for (const declaration of starExportSymbol.declarations) {
+			for (const declaration of starExportSymbol.declarations || []) {
 				if (!ts.isExportDeclaration(declaration)) continue
 
 				const resolved = this.getResolvedModule(declaration)
