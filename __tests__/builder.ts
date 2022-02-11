@@ -72,3 +72,11 @@ test('Build without errors with config from scratch', async () => {
 	const distMainFile = join(basePath, 'dist', 'main.js')
 	expect(existsSync(distMainFile)).toBe(true)
 })
+
+
+test('Capture diagnostic errors with custom logger', async () => {
+	const logger = jest.fn()
+	build({ basePath:basePath.replace(/basic/, 'basic-error'), logger })
+
+  expect(logger).toHaveBeenCalled();
+})
