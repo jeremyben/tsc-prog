@@ -26,11 +26,13 @@ export function createProgramFromConfig({
 	include,
 	exclude,
 	files,
+  logger = logDiagnostics,
 	extends: extend, // cuz keyword
 	references,
 	host,
 }: CreateProgramFromConfigOptions) {
 	let config: TsConfig = {}
+
 
 	if (configFilePath) {
 		configFilePath = ensureAbsolutePath(configFilePath, basePath)
@@ -40,7 +42,7 @@ export function createProgramFromConfig({
 
 		if (readResult.error) {
 			const isTTY = !!ts.sys.writeOutputIsTTY && ts.sys.writeOutputIsTTY()
-			logDiagnostics([readResult.error], isTTY)
+			logger([readResult.error], isTTY)
 		}
 
 		config = readResult.config
@@ -63,7 +65,7 @@ export function createProgramFromConfig({
 
 	if (errors && errors.length) {
 		const isTTY = !!ts.sys.writeOutputIsTTY && ts.sys.writeOutputIsTTY()
-		logDiagnostics(errors, isTTY)
+		logger(errors, isTTY)
 	}
 
 	const program = ts.createProgram({
@@ -83,7 +85,7 @@ export function createProgramFromConfig({
  * Compiles TypeScript files and emits diagnostics if any.
  * @public
  */
-export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, bundleDeclaration }: EmitOptions = {}) {
+export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, bundleDeclaration, logger = logDiagnostics }: EmitOptions = {}) {
 	const options = program.getCompilerOptions()
 
 	if (copyOtherToOutDir && !options.outDir) {
@@ -135,7 +137,7 @@ export function emit(program: ts.Program, { basePath, clean, copyOtherToOutDir, 
 
 	// https://github.com/dsherret/ts-morph/issues/384
 	const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(diagnostics)
-	logDiagnostics(allDiagnostics, options.pretty)
+	logger(allDiagnostics, options.pretty)
 
 	if (!options.noEmit && emitSkipped) {
 		throw Color.red('Compilation failed')

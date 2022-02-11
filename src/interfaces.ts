@@ -24,6 +24,11 @@ export interface CreateProgramFromConfigOptions extends TsConfig {
 	 * Custom CompilerHost to be used by the Program to interact with the underlying system.
 	 */
 	host?: ts.CompilerHost
+
+	/**
+	 * Custom diagnostics logger function
+	 */
+	logger?: (diagnostics: ts.Diagnostic[], pretty?: boolean) => void
 }
 
 /**
@@ -47,6 +52,11 @@ export interface EmitOptions {
 	 * A root directory to resolve relative paths in the `clean` option to.
 	 */
 	basePath?: string
+
+	/**
+	 * Custom diagnostics logger function
+	 */
+	logger?: (diagnostics: ts.Diagnostic[], pretty?: boolean) => void
 
 	/**
 	 * Option to bundle .d.ts files from one or several entrypoints.
