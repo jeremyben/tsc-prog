@@ -74,6 +74,26 @@ test('global name conflict', () => {
 	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
 })
 
+test.skip('external name conflict', () => {
+	const entryPoint = fixture('external-name-conflict', 'dist', 'main.d.ts')
+
+	build({
+		basePath: fixture('external-name-conflict'),
+		extends: '../tsconfig.json',
+		compilerOptions,
+		clean: { outDir: true },
+		bundleDeclaration: {
+			entryPoint,
+		},
+	})
+
+	const bundled = readFileSync(entryPoint, 'utf8')
+	log('bundled', bundled)
+	// todo: conflict exists but is not detected during build.
+
+	// expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
+})
+
 test('ambient declaration', () => {
 	const entryPoint = fixture('ambient-declaration', 'dist', 'main.d.ts')
 
