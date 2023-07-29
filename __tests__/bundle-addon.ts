@@ -5,6 +5,7 @@ import { build, TsConfigCompilerOptions } from '../src'
 const fixture = (...path: string[]) => join(__dirname, '..', '__fixtures__', 'bundle', ...path)
 
 const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+const log = jest.requireActual('console').log
 
 afterEach(() => {
 	consoleLogSpy.mockClear()
@@ -60,7 +61,7 @@ test('global name conflict', () => {
 	const bundled = readFileSync(entryPoint, 'utf8')
 
 	for (const expected of [
-		/^declare type Promise_1 =/gm,
+		/^type Promise_1 =/gm,
 		/^export declare function isMyPromise.*Promise_1/gm,
 		/^export declare function getRealDate.*Date;$/gm,
 		/^declare class Date_2/gm,
@@ -138,14 +139,13 @@ test('namespace merge', () => {
 
 	const bundled = readFileSync(entryPoint, 'utf8')
 
-	expect(bundled).toMatch(/^declare type StatusCode = StatusCode\./m)
+	expect(bundled).toMatch(/^type StatusCode = StatusCode\./m)
 	expect(bundled).toMatch(/^declare namespace StatusCode {$/m)
 
 	expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('successful'))
 })
 
 test.skip('complex', () => {
-	const log = jest.requireActual('console').log
 	const entryPoint = fixture('complex', 'dist', 'main.d.ts')
 
 	build({
