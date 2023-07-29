@@ -84,19 +84,21 @@ export class DeclarationCollector {
 			let rename: string | undefined
 
 			// Don't overwrite symbols already renamed.
-			if (exportRenames.has(origSymbol)) return
+			if (exportRenames.has(origSymbol)) {
+				return
+			}
 
 			if (this.nameIsAlreadyGlobal(exportName)) {
 				let suffix = 1
 				rename = `${exportName}_${suffix}`
 
-				while (this.nameIsAlreadyUsed(rename)) {
+				while (this.nameIsAlreadyExportedOrGlobal(rename)) {
 					rename = `${exportName}_${++suffix}`
 				}
 			}
 
 			if (rename) {
-				// this.debug('export', 'will-be-renamed-then-reexported:', exportName, rename)
+				this.debug('export', 'will-be-renamed-then-reexported:', exportName, rename)
 				exportRenames.set(origSymbol, rename)
 			}
 		})
@@ -314,6 +316,7 @@ export class DeclarationCollector {
 
 			if (this.program.isSourceFileFromExternalLibrary(refSourceFile)) {
 				if (ts.isImportTypeNode(ref)) continue
+				// console.info(this.nameIsAlreadyExported(refName)) // todo: test external-name-conflict
 				this.debug('ref', 'is-from-external-lib:', refName)
 				this.handleSymbolFromExternalLibrary(refSymbol)
 				continue
@@ -339,7 +342,7 @@ export class DeclarationCollector {
 			//
 
 			// ─── Already exported ───
-			if (this.symbols.origSymbols.has(origRefSymbol)) {
+			if (this.isExportedSymbol(origRefSymbol)) {
 				// Already exported as is.
 				if (this.nameIsAlreadyExported(refName)) {
 					// Export has possibly been renamed in its declaration if it conflicted with a global name.
@@ -369,7 +372,7 @@ export class DeclarationCollector {
 			// Look for property and bundle it instead of whole namespace
 			// in case of `import * as A` & `var x = A.a`, or `import('./A').a`.
 
-			if (origRefSymbol.declarations.some(ts.isSourceFile)) {
+			if (this.isImportedAsNamespaceSymbol(origRefSymbol)) {
 				const match = lookForProperty(ref)
 
 				if (!match) {
@@ -399,7 +402,7 @@ export class DeclarationCollector {
 				}
 
 				// Property symbol already exported elsewhere from the entry file.
-				if (this.symbols.origSymbols.has(refPropOrigSymbol)) {
+				if (this.isExportedSymbol(refPropOrigSymbol)) {
 					// Exported as the same name.
 					if (this.nameIsAlreadyExported(refPropOrigName)) {
 						const possibleExportRename = this.exportRenames.get(refPropOrigSymbol)
@@ -470,7 +473,7 @@ export class DeclarationCollector {
 			}
 
 			// Name has already been declared by another reference.
-			if (this.refsDeclared.has(refName)) {
+			if (this.nameIsAlreadyUsebByRef(refName)) {
 				let newRefName: string | undefined
 				const sameNameSymbols = this.refsDeclared.get(refName)!
 				const symbolIndex = sameNameSymbols.indexOf(origRefSymbol)
@@ -486,7 +489,7 @@ export class DeclarationCollector {
 					let suffix = sameNameSymbols.length
 					newRefName = `${refName}_${suffix}`
 
-					while (this.nameIsAlreadyUsed(newRefName)) {
+					while (this.nameIsAlreadyExportedOrGlobal(newRefName)) {
 						this.debug('ref', 'name-suffixed-would-conflict:', newRefName)
 						newRefName = `${refName}_${++suffix}`
 					}
@@ -562,8 +565,12 @@ export class DeclarationCollector {
 		return this.symbols.globalNames.includes(name as ts.__String)
 	}
 
-	private nameIsAlreadyUsed(name: string | ts.__String): boolean {
+	private nameIsAlreadyExportedOrGlobal(name: string | ts.__String): boolean {
 		return this.nameIsAlreadyExported(name) || this.nameIsAlreadyGlobal(name)
+	}
+
+	private nameIsAlreadyUsebByRef(name: string | ts.__String): boolean {
+		return this.refsDeclared.has(name as ts.__String)
 	}
 
 	private maybeTypeOf(name: ts.__String | string, ref: ts.Identifier | ts.ImportTypeNode): string {
@@ -573,6 +580,14 @@ export class DeclarationCollector {
 	private shouldHandleExternalAugmentation(declaration: ts.Declaration): boolean {
 		if (!this.declareAugmentationsOption) return false
 		return !!findFirstParent(declaration, isExternalLibraryAugmentation)
+	}
+
+	private isExportedSymbol(symbol: ts.Symbol): boolean {
+		return this.symbols.origSymbols.has(symbol)
+	}
+
+	private isImportedAsNamespaceSymbol(symbol: ts.Symbol): boolean {
+		return symbol.declarations!.some(ts.isSourceFile)
 	}
 
 	private isGlobalSymbol(symbol: ts.Symbol): boolean {

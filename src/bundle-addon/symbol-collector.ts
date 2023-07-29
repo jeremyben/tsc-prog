@@ -201,7 +201,7 @@ export class SymbolCollector {
 	 */
 	private getModuleExports(excludes: Set<ts.Symbol> = new Set()): ts.Symbol[] {
 		if (this.entrySymbol.escapedName === 'globalThis') {
-			return this.checker.getSymbolsInScope(this.entryFile, -1)
+			return this.checker.getSymbolsInScope(this.entryFile, -1 as any)
 		}
 
 		const symbols = this.checker.getExportsOfModule(this.entrySymbol)
@@ -293,7 +293,7 @@ export class SymbolCollector {
 		const globalSourceFile =
 			allSourceFiles.find((sf) => sf.hasNoDefaultLib) || allSourceFiles.find((sf) => !ts.isExternalModule(sf))
 
-		return this.checker.getSymbolsInScope(globalSourceFile!, -1)
+		return this.checker.getSymbolsInScope(globalSourceFile!, -1 as any) // ts.SymbolFlags.All
 	}
 
 	/**

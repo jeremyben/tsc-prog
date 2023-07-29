@@ -85,22 +85,22 @@ export class DeclarationRegistrar {
 		modulePath: string,
 		reExport = false
 	): void {
-		const name = symbol.escapedName
+		const symbolName = symbol.escapedName
 
 		if (symbol.declarations && symbol.declarations.length > 1) {
-			console.warn(Color.yellow(`External/Json symbol with multiple/merged declarations not supported: ${name}`))
+			console.warn(Color.yellow(`External/Json symbol with multiple/merged declarations not supported: ${symbolName}`))
 		}
 
 		switch (importKind) {
 			case ts.SyntaxKind.ExportSpecifier:
 			case ts.SyntaxKind.ImportSpecifier:
 				// Same name than imported name or default export.
-				if (name === importName || name === ts.InternalSymbolName.Default) {
+				if (symbolName === importName || symbolName === ts.InternalSymbolName.Default) {
 					this.imports.add(`import { ${importName} } from "${modulePath}";`)
 				}
 				// Different name than imported name.
 				else {
-					this.imports.add(`import { ${importName} as ${name} } from "${modulePath}";`)
+					this.imports.add(`import { ${importName} as ${symbolName} } from "${modulePath}";`)
 				}
 				break
 
@@ -121,10 +121,10 @@ export class DeclarationRegistrar {
 		}
 
 		if (reExport) {
-			if (name === ts.InternalSymbolName.Default) {
+			if (symbolName === ts.InternalSymbolName.Default) {
 				this.exports.set(`export default ${importName};`, '')
 			} else {
-				this.exports.set(`export { ${name} };`, '')
+				this.exports.set(`export { ${symbolName} };`, '')
 			}
 		}
 	}
