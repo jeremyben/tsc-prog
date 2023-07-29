@@ -1,33 +1,69 @@
 import * as ts from 'typescript'
+import { EmitOptions } from '../interfaces'
 
 /**
  * @internal
  */
 export function print({
-	importsCollections,
+	typeDirectivesCollection,
+	libDirectivesCollection,
+	importsCollection,
 	exportsCollection,
 	globalsCollection,
 	augmentationsCollection,
+	extrasCollection,
 	newLine,
 }: {
-	importsCollections: Set<string>[]
+	typeDirectivesCollection: Set<string>
+	libDirectivesCollection: Set<string>
+	importsCollection: Set<string>
 	exportsCollection: Map<string, string>
 	globalsCollection?: Map<string, string>
 	augmentationsCollection?: Set<string>
+	extrasCollection?: EmitOptions.Bundle.Extra[]
 	newLine?: ts.NewLineKind
 }): string {
 	const stringBuilder = new StringBuilder(newLine)
 
-	for (const importCollection of importsCollections) {
-		for (const declaration of importCollection) {
-			stringBuilder.addLine(declaration)
+	extrasCollection = filterExtras(extrasCollection, [
+		typeDirectivesCollection,
+		libDirectivesCollection,
+		importsCollection,
+		exportsCollection,
+		globalsCollection,
+		augmentationsCollection,
+	])
+
+	for (const directive of typeDirectivesCollection) {
+		stringBuilder.addLine(directive)
+	}
+	if (typeDirectivesCollection.size) stringBuilder.addLine()
+
+	for (const directive of libDirectivesCollection) {
+		stringBuilder.addLine(directive)
+	}
+	if (libDirectivesCollection.size) stringBuilder.addLine()
+
+	for (const declaration of importsCollection) {
+		stringBuilder.addLine(declaration)
+	}
+	if (importsCollection.size) stringBuilder.addLine()
+
+	for (const extra of extrasCollection) {
+		if (extra.position === 'after-imports') {
+			stringBuilder.addLine(extra.declaration).addLine()
 		}
-		if (importCollection.size) stringBuilder.addLine()
 	}
 
 	for (const [declaration, comment] of exportsCollection) {
 		if (comment) stringBuilder.addLine(comment)
 		stringBuilder.addLine(declaration).addLine()
+	}
+
+	for (const extra of extrasCollection) {
+		if (extra.position === 'after-exports') {
+			stringBuilder.addLine(extra.declaration).addLine()
+		}
 	}
 
 	if (globalsCollection?.size) {
@@ -50,6 +86,21 @@ export function print({
 	stringBuilder.addLine('export {}')
 
 	return stringBuilder.toString()
+}
+
+function filterExtras(
+	extras: EmitOptions.Bundle.Extra[] | undefined,
+	collections: (Set<string> | Map<string, string> | undefined)[]
+): EmitOptions.Bundle.Extra[] {
+	if (!extras) return []
+
+	const declarationsCollections = collections.map((col) => {
+		return col instanceof Set ? Array.from(col) : col instanceof Map ? Array.from(col.values()) : []
+	})
+
+	return extras.filter((extra) => {
+		return declarationsCollections.every((declarations) => !declarations.includes(extra.declaration))
+	})
 }
 
 /**

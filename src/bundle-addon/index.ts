@@ -37,9 +37,10 @@ export function bundleDts(
 	{
 		entryPoint,
 		fallbackOnError = true,
-		globals: globalsOption = true,
-		augmentations: augmentationsOption = true,
-	}: Required<EmitOptions>['bundleDeclaration']
+		globals: keepGlobals = true,
+		augmentations: keepAugmentations = true,
+		extras,
+	}: EmitOptions.Bundle
 ) {
 	const dtsOutDir = getDtsOutDir(program)
 	const dtsProgram = createDtsProgram(program, dtsCache)
@@ -59,21 +60,26 @@ export function bundleDts(
 				if (!entryFile) throw Error('Unable to load entry point:' + path)
 
 				const directives = collectDirectives(dtsProgram)
-				const augmentations = augmentationsOption ? collectExternalAugmentations(dtsProgram) : undefined
+				const augmentationsCollection = keepAugmentations ? collectExternalAugmentations(dtsProgram) : undefined
 				const symbols = new SymbolCollector(entryFile, dtsProgram)
 				const { declarations } = new DeclarationCollector(
 					symbols,
 					entryFile,
 					dtsProgram,
-					globalsOption,
-					augmentationsOption
+					keepGlobals,
+					keepAugmentations
 				)
 
+				const globalsCollection = keepGlobals ? declarations.globals : undefined
+
 				const bundled = print({
-					importsCollections: [directives.typeRef, directives.libRef, declarations.imports],
+					typeDirectivesCollection: directives.typeRef,
+					libDirectivesCollection: directives.libRef,
+					importsCollection: declarations.imports,
 					exportsCollection: declarations.exports,
-					globalsCollection: globalsOption ? declarations.globals : undefined,
-					augmentationsCollection: augmentations,
+					globalsCollection,
+					augmentationsCollection,
+					extrasCollection: extras,
 					newLine: dtsOptions.newLine,
 				})
 

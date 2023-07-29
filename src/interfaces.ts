@@ -51,7 +51,11 @@ export interface EmitOptions {
 	/**
 	 * Option to bundle .d.ts files from one or several entrypoints.
 	 */
-	bundleDeclaration?: {
+	bundleDeclaration?: EmitOptions.Bundle
+}
+
+export namespace EmitOptions {
+	export interface Bundle {
 		/**
 		 * Specifies the .ts file to be used as the starting point for analysis and the final bundle.
 		 * Path is relative to the output directory.
@@ -91,6 +95,18 @@ export interface EmitOptions {
 		 * @default true
 		 */
 		augmentations?: boolean
+
+		/**
+		 * Adds declarations to the final bundle, if they do not already exist.
+		 */
+		extras?: EmitOptions.Bundle.Extra[]
+	}
+
+	export namespace Bundle {
+		export interface Extra {
+			position: 'after-imports' | 'after-exports'
+			declaration: string
+		}
 	}
 }
 
