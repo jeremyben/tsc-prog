@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/jeremyben/tsc-prog/compare/v2.2.1...v2.3.0) (2023-07-29)
+
+
+### Features
+
+* option in bundle to add extra declarations ([0872e6b](https://github.com/jeremyben/tsc-prog/commit/0872e6b3c2f65452bbc1fbb1580da2491a6092bf))
+
+
+### Bug Fixes
+
+* **copy:** more straightforward and reliable way to prevent copy overwriting ([1cd622f](https://github.com/jeremyben/tsc-prog/commit/1cd622f6612fa2b8faf42b95f5964ae54d91f0ea))
+* stop showing warning for references to globalThis which has no declaration ([f67bed7](https://github.com/jeremyben/tsc-prog/commit/f67bed7fb863fced5a53adcc080e391bbc3117fd))
+* typings break with new typescript version ([7f0f774](https://github.com/jeremyben/tsc-prog/commit/7f0f774dbbfb9c75b8d2f4cfc5a74610544624b3))
+* update tsconfig interface ([fedd99e](https://github.com/jeremyben/tsc-prog/commit/fedd99e1e07df06dd394b44b36f5d9c6dba4afa0))
+
 ### [2.2.1](https://github.com/jeremyben/tsc-prog/compare/v2.2.0...v2.2.1) (2020-04-19)
 
 
