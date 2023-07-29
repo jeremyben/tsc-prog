@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import * as ts from 'typescript'
 
 /**
  * @see https://github.com/microsoft/TypeScript/blob/v3.5.3/src/services/refactors/moveToNewFile.ts#L644

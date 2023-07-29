@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import * as ts from 'typescript'
 import { strictEqual } from 'assert'
 import { Color } from '../utils/log'
 import { EitherOne } from '../utils/manipulation'

@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import * as ts from 'typescript'
 import { CreateProgramFromConfigOptions, TsConfig, EmitOptions, BuildOptions } from './interfaces'
 import { ensureAbsolutePath } from './utils/path'
 import { logDiagnostics, Color } from './utils/log'

@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import * as ts from 'typescript'
 import { Color } from '../utils/log'
 import { pushDeep, MapEntry } from '../utils/manipulation'
 import { Reference, SymbolCollector } from './symbol-collector'

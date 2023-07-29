@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import * as ts from 'typescript'
 
 /**
  * Expose some internal typescript utilities. Probably not a good idea

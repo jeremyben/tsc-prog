@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import * as ts from 'typescript'
 import { Color } from '../utils/log'
 import { mapToSet } from '../utils/manipulation'
 import { findFirstChild, getModuleName } from './syntax-retrieval'

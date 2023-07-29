@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import * as ts from 'typescript'
 import { changeDir } from './utils/path'
 import { cp } from './utils/fs'
 import { Color } from './utils/log'
